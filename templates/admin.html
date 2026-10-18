@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    {{if .Message}}<div class="msg msg-ok">{{.Message}}</div>{{end}}
+    {{if .Error}}<div class="msg msg-err">{{.Error}}</div>{{end}}
+
+
+    <div class="section-container">
+        <h2>Create User</h2>
+        <form method="POST" action="/users/">
+            <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+            <div class="form-grid">
+                <div class="form-field"><label>Username</label><input type="text" name="username" required></div>
+                <div class="form-field"><label>Password (min 8 characters)</label><input type="password" name="password" required></div>
+                <div class="form-field"><label>Admin</label><input type="checkbox" name="is_admin" style="width:auto"> Make this user an admin</div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn">Create User</button></div>
+        </form>
+    </div>
+
+    <div class="section-container">
+        <h2>Users</h2>
+        <table class="data-table">
+            <thead><tr><th>Username</th><th>Role</th><th>Created</th><th>Active Sessions</th><th>Reset Password</th><th>Admin</th><th>Delete</th></tr></thead>
+            <tbody>
+                {{range .Users}}
+                <tr>
+                    <td>{{.Username}}{{if eq .Username $.Current}} <span class="badge badge-grey">you</span>{{end}}</td>
+                    <td>{{if .IsAdmin}}<span class="badge">Admin</span>{{else}}Operator{{end}}</td>
+                    <td>{{.CreatedAt}}</td>
+                    <td>{{.Sessions}}</td>
+                    <td>
+                        <form class="inline-form" method="POST" action="/users/{{.ID}}/password">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <input type="password" name="password" required>
+                            <button type="submit" class="btn btn-secondary btn-small">Reset</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="/users/{{.ID}}/admin">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-secondary btn-small">{{if .IsAdmin}}Remove admin{{else}}Make admin{{end}}</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="/users/{{.ID}}/delete" onsubmit="return confirm('Delete user {{.Username}}?');">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="/static/user-menu.js"></script>
+</body>
+</html>

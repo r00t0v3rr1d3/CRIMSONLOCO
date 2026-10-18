@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    {{if .Message}}<div class="msg msg-ok">{{.Message}}</div>{{end}}
+    {{if .Error}}<div class="msg msg-err">{{.Error}}</div>{{end}}
+    <div class="section-container">
+        <h2>Operations</h2>
+        {{if .IsAdmin}}
+        <form method="POST" action="/admin/operations">
+            <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+            <div class="form-grid">
+                <div class="form-field"><label>Operation Name</label><input type="text" name="name" required></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn">Add Operation</button></div>
+        </form>
+        {{end}}
+        <table class="data-table" style="margin-top:20px">
+            <thead><tr><th>Operation</th><th>Hosts</th>{{if .IsAdmin}}<th>Added</th><th>By</th><th></th>{{end}}</tr></thead>
+            <tbody>
+                {{range .Operations}}
+                <tr>
+                    <td><a href="{{.DetailURL}}">{{.Name}}</a></td>
+                    <td><a href="{{.ListURL}}">{{.HostCount}}</a></td>
+                    {{if $.IsAdmin}}
+                    <td>{{.CreatedAt}}</td>
+                    <td>{{.CreatedBy}}</td>
+                    <td>
+                        <form method="POST" action="/admin/operations/{{.ID}}/delete" onsubmit="return confirm('Delete operation {{.Name}}?');">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                        </form>
+                    </td>
+                    {{end}}
+                </tr>
+                {{else}}
+                <tr><td colspan="{{if .IsAdmin}}5{{else}}2{{end}}" class="muted">No operations in the database yet.</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{if .NoOperationHosts}}
+        <p class="muted">{{.NoOperationHosts}} host(s) have no operation assigned. <a href="/hosts/">View all hosts</a></p>
+        {{end}}
+    </div>
+</div>
+<script src="/static/user-menu.js"></script>
+</body>
+</html>

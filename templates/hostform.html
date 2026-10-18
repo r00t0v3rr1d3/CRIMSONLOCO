@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .Editing}}Edit{{else}}Add{{end}} Host - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="section-container">
+        <h2>{{if .Editing}}Edit Host{{else}}Add Host{{end}}</h2>
+        {{if .Error}}<div class="msg msg-err">{{.Error}}</div>{{end}}
+        <form method="POST" action="{{if .Editing}}/hostinfo/{{.Host.ID}}/edit{{else}}/hosts/new{{end}}">
+            <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+            <input type="hidden" name="version" value="{{.Host.Version}}">
+            {{with .Host}}
+            <div class="form-grid">
+                <div class="form-field"><label>IP Address</label><input type="text" name="ip_address" value="{{.IPAddress}}"></div>
+                <div class="form-field"><label>FQDN</label><input type="text" name="fqdn" value="{{.FQDN}}"></div>
+                <div class="form-field"><label>MAC Address</label><input type="text" name="mac_address" value="{{.MACAddress}}"></div>
+                <div class="form-field"><label>Machine GUID</label><input type="text" name="machine_guid" value="{{.MachineGUID}}"></div>
+                <div class="form-field"><label>Hardware</label><input type="text" name="hardware" value="{{.Hardware}}"></div>
+                <div class="form-field"><label>NT Name</label><input type="text" name="nt_name" value="{{.NTName}}"></div>
+                <div class="form-field"><label>NT Domain</label><input type="text" name="nt_domain" value="{{.NTDomain}}"></div>
+                <div class="form-field"><label>Operation</label><select name="operation">
+                        <option value="">(No operation)</option>
+                        {{range $.Operations}}<option value="{{.}}"{{if eq . $.Host.Operation}} selected{{end}}>{{.}}</option>{{end}}
+                    </select></div>
+                <div class="form-field"><label>Status</label>
+                    <select name="status">
+                        <option value=""{{if eq .Status ""}} selected{{end}}>(No status)</option>
+                        {{$current := .Status}}
+                        {{range $.Statuses}}<option value="{{.}}" {{if eq . $current}}selected{{end}}>{{.}}</option>{{end}}
+                    </select>
+                </div>
+                <div class="form-field wide"><label>Note</label><textarea name="note" rows="2">{{.Note}}</textarea></div>
+                <div class="form-field wide"><label>Administrators (users / groups)</label><textarea name="administrators" rows="2">{{.Administrators}}</textarea></div>
+            </div>
+            {{end}}
+            <div class="form-actions">
+                <button type="submit" class="btn">Save Host</button>
+                {{if .Editing}}<a class="btn btn-secondary" href="/hostinfo/{{.Host.ID}}">Cancel</a>{{else}}<a class="btn btn-secondary" href="/hosts/">Cancel</a>{{end}}
+            </div>
+        </form>
+    </div>
+</div>
+<script src="/static/user-menu.js"></script>
+</body>
+</html>

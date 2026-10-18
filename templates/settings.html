@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="section-container">
+        <h2>Settings</h2>
+        {{if .Message}}<div class="msg msg-ok">{{.Message}}</div>{{end}}
+        {{if .Error}}<div class="msg msg-err">{{.Error}}</div>{{end}}
+        <h3>Change Password</h3>
+        <form method="POST" action="/account/password">
+            <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+            <div class="form-grid">
+                <div class="form-field"><label>Current Password</label><input type="password" name="current_password" autocomplete="current-password" required></div>
+                <div class="form-field"><label>New Password (min 8 characters)</label><input type="password" name="new_password" autocomplete="new-password" required></div>
+                <div class="form-field"><label>Confirm New Password</label><input type="password" name="confirm_password" autocomplete="new-password" required></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn">Change Password</button></div>
+        </form>
+    </div>
+</div>
+<script src="/static/user-menu.js"></script>
+</body>
+</html>

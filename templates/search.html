@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Search - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="section-container">
+        <h2>Global Search</h2>
+        <form method="GET" action="/search/">
+            <div class="form-field">
+                <label for="global-search-q">Search</label>
+                <input type="text" id="global-search-q" name="q" value="{{.Query}}">
+            </div>
+            <button type="submit" class="btn">Search</button>
+        </form>
+        {{if .Searched}}
+            {{if .Results}}
+            <p class="muted">{{len .Results}} host(s) matched.</p>
+            {{range .Results}}
+            <div class="search-result">
+                <h3><a href="/hostinfo/{{.Host.ID}}">{{.Title}}</a></h3>
+                {{range .Matches}}
+                <p class="search-match"><span class="match-label">{{.Label}}:</span> {{.HTML}}</p>
+                {{end}}
+            </div>
+            {{end}}
+            {{if .Truncated}}<p class="muted">More than 500 hosts matched; only the newest 500 are shown.</p>{{end}}
+            {{else}}
+            <p class="muted">No hosts matched.</p>
+            {{end}}
+        {{end}}
+    </div>
+</div>
+<script src="/static/user-menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hosts - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="toolbar">
+        <form method="GET" action="/hosts/">
+            <input type="text" class="search-bar" name="q" value="{{.Query}}">
+            <select name="operation">
+                <option value="">All operations</option>
+                {{range .Operations}}<option value="{{.}}" {{if eq . $.Operation}}selected{{end}}>{{.}}</option>{{end}}
+            </select>
+            <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+        <a class="btn" href="/hosts/new">+ Add Host</a>
+        <span class="muted">{{len .Hosts}} host(s)</span>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                {{range .Columns}}<th><a class="sort-link" href="{{.URL}}" title="Click to sort: ascending, descending, reset">{{.Label}}{{if .Indicator}} {{.Indicator}}{{end}}</a></th>
+                {{end}}
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Hosts}}
+            <tr>
+                <td><a href="/hostinfo/{{.ID}}">{{if .IPAddress}}{{.IPAddress}}{{else}}(view){{end}}</a></td>
+                <td>{{.FQDN}}</td>
+                <td>{{.NTName}}</td>
+                <td>{{.Operation}}</td>
+                <td>{{.Status}}</td>
+                <td>{{.CreatedAt}}</td>
+                <td>{{.UpdatedAt}}</td>
+            </tr>
+            {{else}}
+            <tr><td colspan="7" class="muted">No hosts found.</td></tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<script src="/static/user-menu.js"></script>
+</body>
+</html>

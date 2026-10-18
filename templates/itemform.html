@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Heading}} - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="section-container">
+        <h2>{{.Heading}}</h2>
+        {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+        <form method="POST" action="{{.Action}}">
+            <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+            <div class="form-grid">
+                {{range .Fields}}
+                {{if eq .Kind "textarea"}}
+                <div class="form-field wide"><label>{{.Label}}</label><textarea name="{{.Name}}" rows="3">{{.Value}}</textarea></div>
+                {{else if eq .Kind "datetime"}}
+                <div class="form-field"><label>{{.Label}}</label><input type="datetime-local" name="{{.Name}}" value="{{.Value}}"></div>
+                {{else if eq .Kind "select"}}
+                <div class="form-field"><label>{{.Label}}</label><select name="{{.Name}}">{{$v := .Value}}{{range .Options}}<option value="{{.}}"{{if eq . $v}} selected{{end}}>{{.}}</option>{{end}}</select></div>
+                {{else if eq .Kind "checkbox"}}
+                <div class="form-field checkbox-field"><label><input type="checkbox" name="{{.Name}}" value="1"{{if eq .Value "1"}} checked{{end}}> {{.Label}}</label></div>
+                {{else}}
+                <div class="form-field" data-field-row="{{.Name}}"><label>{{.Label}}</label><input type="text" name="{{.Name}}" value="{{.Value}}"></div>
+                {{end}}
+                {{end}}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn">Save</button>
+                <a href="{{.BackURL}}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+        {{range .Meta}}
+        <div class="detail-item"><span class="detail-value">{{.}}</span></div>
+        {{end}}
+    </div>
+</div>
+<script src="/static/user-menu.js"></script>
+<script>
+(function () {
+    var cb = document.querySelector('input[type="checkbox"][name="in_memory"]');
+    var row = document.querySelector('[data-field-row="pid"]');
+    if (!cb || !row) { return; }
+    function sync() { row.style.display = cb.checked ? '' : 'none'; }
+    cb.addEventListener('change', sync);
+    sync();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Info - CRIMSONLOCO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script>try{var t=localStorage.getItem('CRIMSONLOCO-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="navbar-left">
+        <span class="logo">CRIMSONLOCO</span>
+        <a href="/hosts/">Hosts</a>
+        <a href="/operations/">Operations</a>
+        <a href="/search/">Global Search</a>
+        {{if .IsAdmin}}<a href="/admin/">Administration</a>{{end}}
+    </div>
+    <div class="navbar-right">
+        <button type="button" id="themeToggle" class="theme-toggle" title="Toggle dark / light mode" aria-label="Toggle dark / light mode">&#9728;</button>
+        <span class="who">v{{appVersion}}</span>
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="userMenuBtn">{{.Username}}{{if .IsAdmin}} (admin){{else}} (operator){{end}} &#9662;</button>
+            <div class="user-menu hidden" id="userMenu">
+                <div class="user-menu-head">Signed in as <strong>{{.Username}}</strong>{{if .IsAdmin}} (admin){{else}} (operator){{end}}</div>
+                <a href="/settings/" class="user-menu-link">Settings</a>
+                <form method="POST" action="/logout/" class="user-menu-logout">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary btn-small">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+{{with .Host}}
+    <div class="section-container">
+        <div class="section-head">
+            <h2>Host Info</h2>
+            {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{.ID}}/delete" onsubmit="return confirm('Delete this host?');">
+                <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                <button type="submit" class="btn btn-danger">Delete Host</button>
+            </form>{{end}}
+        </div>
+        <div id="statusMessage" class="status-message"></div>
+        <div class="detail-grid">
+            <div>
+                <div class="editable-field-group" data-field="ip_address" data-label="IP" data-value="{{.IPAddress}}">
+                    <label class="editable-label">IP:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="mac_address" data-label="MAC Address" data-value="{{.MACAddress}}">
+                    <label class="editable-label">MAC Address:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="machine_guid" data-label="Machine GUID" data-value="{{.MachineGUID}}">
+                    <label class="editable-label">Machine GUID:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="hardware" data-label="Hardware" data-value="{{.Hardware}}">
+                    <label class="editable-label">Hardware:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="status" data-label="Status" data-value="{{.Status}}">
+                    <label class="editable-label">Status:</label>
+                    <span class="editable-value"></span>
+                    <select class="editable-input hidden"><option value="">(not set)</option>{{range $.Statuses}}<option value="{{.}}"{{if eq . $.Host.Status}} selected{{end}}>{{.}}</option>{{end}}</select>
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="operation" data-label="Operation" data-value="{{.Operation}}">
+                    <label class="editable-label">Operation:</label>
+                    <span class="editable-value"></span>
+                    <select class="editable-input hidden">{{range $.Operations}}<option value="{{.}}"{{if eq . $.Host.Operation}} selected{{end}}>{{.}}</option>{{end}}</select>
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="editable-field-group" data-field="fqdn" data-label="FQDN" data-value="{{.FQDN}}">
+                    <label class="editable-label">FQDN:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="nt_name" data-label="NT Name" data-value="{{.NTName}}">
+                    <label class="editable-label">NT Name:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="nt_domain" data-label="NT Domain" data-value="{{.NTDomain}}">
+                    <label class="editable-label">NT Domain:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="note" data-label="Note" data-value="{{.Note}}">
+                    <label class="editable-label">Note:</label>
+                    <span class="editable-value"></span>
+                    <textarea class="editable-input hidden" rows="4"></textarea>
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group" data-field="administrators" data-label="Administrators" data-value="{{.Administrators}}">
+                    <label class="editable-label">Administrators:</label>
+                    <span class="editable-value"></span>
+                    <textarea class="editable-input hidden" rows="4"></textarea>
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+                <div class="editable-field-group">
+                    <label class="editable-label">Created:</label>
+                    <span class="editable-value-static">{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</span>
+                </div>
+                <div class="editable-field-group">
+                    <label class="editable-label">Updated:</label>
+                    <span class="editable-value-static" id="updatedMeta">{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-container">
+        <h2>Tools</h2>
+        {{if $.Tools}}
+        <table class="data-table">
+            <thead>
+                <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Size</th><th>Hash</th><th>Local Copy Path</th><th>Created</th><th>Last Modified</th><th></th></tr>
+            </thead>
+            <tbody>
+                {{range $.Tools}}
+                <tr>
+                    <td>{{.Name}}{{if .Details}}<div style="white-space:pre-wrap">{{.Details}}</div>{{end}}</td>
+                    <td>{{.Version}}</td>
+                    <td>{{.Status}}</td>
+                    <td>{{.Path}}</td>
+                    <td>{{if .InMemory}}Yes{{if .PID}} (PID {{.PID}}){{end}}{{else}}No{{end}}</td>
+                    <td>{{spacetime .TouchTime}}</td>
+                    <td>{{.Size}}</td>
+                    <td>{{.Hash}}</td>
+                    <td>{{.LocalCopyPath}}</td>
+                    <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
+                    <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
+                    <td>
+                        <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/edit">Edit</a>
+                        <form method="POST" action="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/remove" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-secondary">Remove</button>
+                        </form>
+                        {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/delete" onsubmit="return confirm('Delete this tool?');" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                        </form>{{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{end}}
+        <div class="form-actions">
+            <a class="btn" href="/hostinfo/{{.ID}}/tools/new">Add Tool</a>
+        </div>
+        {{if $.RemovedTools}}
+        <details class="removed-tools">
+            <summary>Removed Tools ({{len $.RemovedTools}})</summary>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Size</th><th>Hash</th><th>Local Copy Path</th><th>Deleted Time</th><th>Created</th><th>Last Modified</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {{range $.RemovedTools}}
+                    <tr>
+                        <td>{{.Name}}{{if .Details}}<div style="white-space:pre-wrap">{{.Details}}</div>{{end}}</td>
+                        <td>{{.Version}}</td>
+                        <td>{{.Status}}</td>
+                        <td>{{.Path}}</td>
+                        <td>{{if .InMemory}}Yes{{if .PID}} (PID {{.PID}}){{end}}{{else}}No{{end}}</td>
+                        <td>{{spacetime .TouchTime}}</td>
+                        <td>{{.Size}}</td>
+                        <td>{{.Hash}}</td>
+                        <td>{{.LocalCopyPath}}</td>
+                        <td>{{spacetime .DeletedTime}}</td>
+                        <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
+                        <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
+                        <td>
+                            <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/edit">Edit</a>
+                            {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/delete" onsubmit="return confirm('Delete this tool?');" style="display:inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                                <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                            </form>{{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </details>
+        {{end}}
+    </div>
+
+    <div class="section-container">
+        <h2>Files</h2>
+        {{if $.Files}}
+        <table class="data-table">
+            <thead>
+                <tr><th>Path</th><th>Touch Time</th><th>Notes</th><th>Created</th><th>Last Modified</th><th></th></tr>
+            </thead>
+            <tbody>
+                {{range $.Files}}
+                <tr>
+                    <td>{{.Path}}</td>
+                    <td>{{spacetime .TouchTime}}</td>
+                    <td style="white-space:pre-wrap">{{.Notes}}</td>
+                    <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
+                    <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
+                    <td>
+                        <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/files/{{.ID}}/edit">Edit</a>
+                        {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/files/{{.ID}}/delete" onsubmit="return confirm('Delete this file?');" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                        </form>{{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{end}}
+        <div class="form-actions">
+            <a class="btn" href="/hostinfo/{{.ID}}/files/new">Add File</a>
+        </div>
+    </div>
+
+    <div class="section-container">
+        <h2>Critical Path</h2>
+        {{if $.CriticalPaths}}
+        <table class="data-table">
+            <thead>
+                <tr><th>Source Host</th><th>Method</th><th>Date / Time</th><th>Note</th><th>Created</th><th>Last Modified</th><th></th></tr>
+            </thead>
+            <tbody>
+                {{range $.CriticalPaths}}
+                <tr>
+                    <td>{{.SourceHost}}</td>
+                    <td>{{.Method}}</td>
+                    <td>{{.OccurredAt}} UTC</td>
+                    <td style="white-space:pre-wrap">{{.Note}}</td>
+                    <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
+                    <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
+                    <td>
+                        <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/critical-paths/{{.ID}}/edit">Edit</a>
+                        {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/critical-paths/{{.ID}}/delete" onsubmit="return confirm('Delete this critical path entry?');" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                        </form>{{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{end}}
+        <div class="form-actions">
+            <a class="btn" href="/hostinfo/{{.ID}}/critical-paths/new">Add Critical Path</a>
+        </div>
+    </div>
+    {{end}}
+
+</div>
+<script>
+    window.CRIMSONLOCO_FIELD_EDIT = {
+        url: "/hostinfo/{{.Host.ID}}/field",
+        csrf: "{{.CSRF}}",
+        version: {{.Host.Version}}
+    };
+</script>
+<script src="/static/inline-edit.js"></script>
+<script src="/static/user-menu.js"></script>
+</body>
+</html>
