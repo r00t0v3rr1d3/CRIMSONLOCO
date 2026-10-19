@@ -29,7 +29,7 @@ import (
 // Config and shared state
 // ---------------------------------------------------------------------------
 
-const Version = "1.0.0"
+const Version = "1.0.1"
 
 const SchemaVersion = 7
 
@@ -609,6 +609,20 @@ func resolveConfig(cfg *config, cliSet map[string]bool) error {
 	return nil
 }
 
+// tlsNoiseWriter drops TLS handshake error lines from the server error
+// log. With a self-signed certificate, every client that balks at the
+// browser warning, or connects without trusting the certificate,
+// produces one; they carry no information worth keeping. All other
+// server log lines pass through unchanged.
+type tlsNoiseWriter struct{}
+
+func (tlsNoiseWriter) Write(p []byte) (int, error) {
+	if strings.Contains(string(p), "TLS handshake error") {
+		return len(p), nil
+	}
+	return os.Stderr.Write(p)
+}
+
 func main() {
 	cfg, mode, cliSet, err := parseArgs(os.Args[1:])
 	if err != nil {
@@ -737,6 +751,7 @@ func main() {
 	server := &http.Server{
 		Addr:              cfg.addr,
 		Handler:           securityHeaders(mux),
+		ErrorLog:          log.New(tlsNoiseWriter{}, "", log.LstdFlags),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       60 * time.Second,
 		WriteTimeout:      60 * time.Second,
