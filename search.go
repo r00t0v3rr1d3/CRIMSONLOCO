@@ -177,8 +177,8 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	frows.Close()
 
 	var cps []*CriticalPath
-	cpClause, n := likeClause("source_host", "method", "occurred_at", "note")
-	crows, err := app.db.Query(`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), occurred_at,
+	cpClause, n := likeClause("source_host", "method", "credentials", "occurred_at", "note")
+	crows, err := app.db.Query(`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at,
 		IFNULL(note,''), IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
 		FROM critical_paths WHERE `+cpClause, repeatArg(pattern, n)...)
 	if err != nil {
@@ -188,7 +188,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for crows.Next() {
 		cp := &CriticalPath{}
-		if err := crows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.OccurredAt, &cp.Note, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
+		if err := crows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.OccurredAt, &cp.Note, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
 			cps = append(cps, cp)
 			hostIDs[cp.HostID] = true
 		}
@@ -269,6 +269,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 		for _, cp := range cpsByHost[h.ID] {
 			addMatches(&res, [][2]string{
 				{"Critical Path Source Host", cp.SourceHost}, {"Critical Path Method", cp.Method},
+				{"Critical Path Credentials", cp.Credentials},
 				{"Critical Path Date/Time", cp.OccurredAt}, {"Critical Path Note", cp.Note},
 			})
 		}

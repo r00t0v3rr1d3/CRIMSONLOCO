@@ -751,16 +751,17 @@ func toolStatusOptions(current string) []string {
 }
 
 type CriticalPath struct {
-	ID         int64
-	HostID     int64
-	SourceHost string
-	Method     string
-	OccurredAt string
-	Note       string
-	CreatedBy  string
-	CreatedAt  string
-	UpdatedBy  string
-	UpdatedAt  string
+	ID          int64
+	HostID      int64
+	SourceHost  string
+	Method      string
+	Credentials string
+	OccurredAt  string
+	Note        string
+	CreatedBy   string
+	CreatedAt   string
+	UpdatedBy   string
+	UpdatedAt   string
 }
 
 func (app *App) hostInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -777,7 +778,7 @@ func (app *App) hostInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cpRows, err := app.db.Query(
-		`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), occurred_at,
+		`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at,
 		        IFNULL(note,''), IFNULL(created_by,''), created_at,
 		        IFNULL(updated_by,''), IFNULL(updated_at,'')
 		 FROM critical_paths WHERE host_id = ? ORDER BY occurred_at ASC`, id)
@@ -789,7 +790,7 @@ func (app *App) hostInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var paths []*CriticalPath
 	for cpRows.Next() {
 		cp := &CriticalPath{}
-		if err := cpRows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.OccurredAt, &cp.Note, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
+		if err := cpRows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.OccurredAt, &cp.Note, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
 			paths = append(paths, cp)
 		}
 	}
@@ -1364,11 +1365,11 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 	if cpID > 0 {
 		heading, action = "Edit Critical Path", back+"/critical-paths/"+strconv.FormatInt(cpID, 10)+"/edit"
 		row := app.db.QueryRow(
-			`SELECT id, IFNULL(source_host,''), IFNULL(method,''), occurred_at, IFNULL(note,''),
+			`SELECT id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at, IFNULL(note,''),
 			        IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
 			 FROM critical_paths WHERE id = ? AND host_id = ?`, cpID, id)
 		current = &CriticalPath{HostID: id}
-		if err := row.Scan(&current.ID, &current.SourceHost, &current.Method, &current.OccurredAt, &current.Note,
+		if err := row.Scan(&current.ID, &current.SourceHost, &current.Method, &current.Credentials, &current.OccurredAt, &current.Note,
 			&current.CreatedBy, &current.CreatedAt, &current.UpdatedBy, &current.UpdatedAt); err == sql.ErrNoRows {
 			http.NotFound(w, r)
 			return
@@ -1377,10 +1378,11 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
-	fields := func(source, method, note string) []itemField {
+	fields := func(source, method, credentials, note string) []itemField {
 		return []itemField{
 			{Label: "Source Host", Name: "source_host", Value: source, Kind: "text"},
 			{Label: "Method", Name: "method", Value: method, Kind: "text"},
+			{Label: "Credentials", Name: "credentials", Value: credentials, Kind: "text"},
 			{Label: "Note", Name: "note", Value: note, Kind: "textarea"},
 		}
 	}
@@ -1398,6 +1400,7 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 		}
 		source := strings.TrimSpace(r.FormValue("source_host"))
 		method := strings.TrimSpace(r.FormValue("method"))
+		credentials := strings.TrimSpace(r.FormValue("credentials"))
 		note := strings.TrimSpace(r.FormValue("note"))
 		errMsg := ""
 		if source == "" {
@@ -1406,13 +1409,15 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 			errMsg = msg
 		} else if msg := checkFieldLen("Method", method, maxShortFieldLen); msg != "" {
 			errMsg = msg
+		} else if msg := checkFieldLen("Credentials", credentials, maxShortFieldLen); msg != "" {
+			errMsg = msg
 		} else if msg := checkFieldLen("Note", note, maxLongFieldLen); msg != "" {
 			errMsg = msg
 		}
 		if errMsg != "" {
 			app.renderItemForm(w, r, http.StatusBadRequest, itemFormPage{
 				Heading: heading, Action: action, BackURL: back,
-				Error: errMsg, Fields: fields(source, method, note), Meta: meta(),
+				Error: errMsg, Fields: fields(source, method, credentials, note), Meta: meta(),
 			})
 			return
 		}
@@ -1424,15 +1429,15 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 			itemID, err = app.newRandomID("critical_paths")
 			if err == nil {
 				_, err = app.db.Exec(
-					`INSERT INTO critical_paths (id, host_id, source_host, method, occurred_at, note, created_by, created_at, updated_by, updated_at)
-					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-					itemID, id, source, method, now, note, sess.Username, now, sess.Username, now)
+					`INSERT INTO critical_paths (id, host_id, source_host, method, credentials, occurred_at, note, created_by, created_at, updated_by, updated_at)
+					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					itemID, id, source, method, credentials, now, note, sess.Username, now, sess.Username, now)
 			}
 		} else {
 			_, err = app.db.Exec(
-				`UPDATE critical_paths SET source_host = ?, method = ?, note = ?, updated_by = ?, updated_at = ?
+				`UPDATE critical_paths SET source_host = ?, method = ?, credentials = ?, note = ?, updated_by = ?, updated_at = ?
 				 WHERE id = ? AND host_id = ?`,
-				source, method, note, sess.Username, now, cpID, id)
+				source, method, credentials, note, sess.Username, now, cpID, id)
 		}
 		if err != nil {
 			log.Printf("save critical path: %v", err)
@@ -1442,11 +1447,11 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 		http.Redirect(w, r, back, http.StatusFound)
 		return
 	}
-	source, method, note := "", "", ""
+	source, method, credentials, note := "", "", "", ""
 	if current != nil {
-		source, method, note = current.SourceHost, current.Method, current.Note
+		source, method, credentials, note = current.SourceHost, current.Method, current.Credentials, current.Note
 	}
 	app.renderItemForm(w, r, http.StatusOK, itemFormPage{
-		Heading: heading, Action: action, BackURL: back, Fields: fields(source, method, note), Meta: meta(),
+		Heading: heading, Action: action, BackURL: back, Fields: fields(source, method, credentials, note), Meta: meta(),
 	})
 }

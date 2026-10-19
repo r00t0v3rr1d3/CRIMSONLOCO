@@ -31,7 +31,7 @@ import (
 
 const Version = "1.0.1"
 
-const SchemaVersion = 7
+const SchemaVersion = 8
 
 const sessionLifetime = 8 * time.Hour
 
@@ -153,6 +153,7 @@ func initDB(db *sql.DB) error {
 			host_id INTEGER NOT NULL REFERENCES hosts(id) ON DELETE CASCADE,
 			source_host TEXT,
 			method TEXT,
+			credentials TEXT,
 			occurred_at TEXT NOT NULL,
 			note TEXT,
 			created_by TEXT,
@@ -609,11 +610,6 @@ func resolveConfig(cfg *config, cliSet map[string]bool) error {
 	return nil
 }
 
-// tlsNoiseWriter drops TLS handshake error lines from the server error
-// log. With a self-signed certificate, every client that balks at the
-// browser warning, or connects without trusting the certificate,
-// produces one; they carry no information worth keeping. All other
-// server log lines pass through unchanged.
 type tlsNoiseWriter struct{}
 
 func (tlsNoiseWriter) Write(p []byte) (int, error) {
