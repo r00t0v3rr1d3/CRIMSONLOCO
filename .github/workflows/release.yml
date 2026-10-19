@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            runner: ubuntu-latest
+          - goos: linux
+            goarch: arm64
+            runner: ubuntu-24.04-arm
+          - goos: windows
+            goarch: amd64
+            runner: windows-latest
+          - goos: darwin
+            goarch: amd64
+            runner: macos-15-intel
+          - goos: darwin
+            goarch: arm64
+            runner: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        shell: bash
+        env:
+          CGO_ENABLED: '1'
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          ext=""
+          if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
+          go build -trimpath -o "CRIMSONLOCO$ext" .
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dir = "CRIMSONLOCO-${{ matrix.goos }}-${{ matrix.goarch }}"
+          New-Item -ItemType Directory -Path $dir | Out-Null
+          Copy-Item CRIMSONLOCO.exe $dir
+          Copy-Item templates $dir -Recurse
+          Copy-Item static $dir -Recurse
+          Copy-Item CRIMSONLOCO.conf $dir
+          Copy-Item README.md $dir
+          Compress-Archive -Path $dir -DestinationPath "$dir.zip"
+
+      - name: Package (Linux and macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          dir="CRIMSONLOCO-${{ matrix.goos }}-${{ matrix.goarch }}"
+          mkdir "$dir"
+          cp CRIMSONLOCO "$dir/"
+          cp -r templates static "$dir/"
+          cp CRIMSONLOCO.conf README.md "$dir/"
+          zip -r "$dir.zip" "$dir"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CRIMSONLOCO-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: CRIMSONLOCO-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum *.zip > SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
