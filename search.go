@@ -124,7 +124,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	pattern := "%" + likeEscaper.Replace(q) + "%"
 	hostIDs := map[int64]bool{}
 
-	hostClause, n := likeClause("ip_address", "mac_address", "machine_guid", "hardware",
+	hostClause, n := likeClause("ip_address", "mac_address", "machine_guid", "hardware", "function", "os",
 		"status", "fqdn", "nt_name", "nt_domain", "operation", "note", "administrators")
 	rows, err := app.db.Query("SELECT id FROM hosts WHERE "+hostClause, repeatArg(pattern, n)...)
 	if err != nil {
@@ -242,6 +242,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 		addMatches(&res, [][2]string{
 			{"IP Address", h.IPAddress}, {"MAC Address", h.MACAddress},
 			{"Machine GUID", h.MachineGUID}, {"Hardware", h.Hardware},
+			{"Function", h.Function}, {"OS", h.OS},
 			{"Status", h.Status}, {"FQDN", h.FQDN}, {"NT Name", h.NTName},
 			{"NT Domain", h.NTDomain}, {"Operation", h.Operation},
 			{"Note", h.Note}, {"Administrators", h.Administrators},

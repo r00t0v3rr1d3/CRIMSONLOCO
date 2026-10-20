@@ -48,7 +48,7 @@
         <div id="statusMessage" class="status-message"></div>
         <div class="detail-grid">
             <div>
-                <div class="editable-field-group" data-field="ip_address" data-label="IP" data-value="{{.IPAddress}}">
+<div class="editable-field-group" data-field="ip_address" data-label="IP" data-value="{{.IPAddress}}">
                     <label class="editable-label">IP:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
@@ -57,7 +57,7 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="mac_address" data-label="MAC Address" data-value="{{.MACAddress}}">
+<div class="editable-field-group" data-field="mac_address" data-label="MAC Address" data-value="{{.MACAddress}}">
                     <label class="editable-label">MAC Address:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
@@ -66,7 +66,7 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="machine_guid" data-label="Machine GUID" data-value="{{.MachineGUID}}">
+<div class="editable-field-group" data-field="machine_guid" data-label="Machine GUID" data-value="{{.MachineGUID}}">
                     <label class="editable-label">Machine GUID:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
@@ -75,7 +75,7 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="hardware" data-label="Hardware" data-value="{{.Hardware}}">
+<div class="editable-field-group" data-field="hardware" data-label="Hardware" data-value="{{.Hardware}}">
                     <label class="editable-label">Hardware:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
@@ -84,19 +84,10 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="status" data-label="Status" data-value="{{.Status}}">
-                    <label class="editable-label">Status:</label>
+<div class="editable-field-group" data-field="os" data-label="OS" data-value="{{.OS}}">
+                    <label class="editable-label">OS:</label>
                     <span class="editable-value"></span>
-                    <select class="editable-input hidden"><option value="">(not set)</option>{{range $.Statuses}}<option value="{{.}}"{{if eq . $.Host.Status}} selected{{end}}>{{.}}</option>{{end}}</select>
-                    <div class="action-buttons hidden">
-                        <button type="button" class="save-button" title="Save">&#10003;</button>
-                        <button type="button" class="cancel-button" title="Cancel">x</button>
-                    </div>
-                </div>
-                <div class="editable-field-group" data-field="operation" data-label="Operation" data-value="{{.Operation}}">
-                    <label class="editable-label">Operation:</label>
-                    <span class="editable-value"></span>
-                    <select class="editable-input hidden">{{range $.Operations}}<option value="{{.}}"{{if eq . $.Host.Operation}} selected{{end}}>{{.}}</option>{{end}}</select>
+                    <input type="text" class="editable-input hidden">
                     <div class="action-buttons hidden">
                         <button type="button" class="save-button" title="Save">&#10003;</button>
                         <button type="button" class="cancel-button" title="Cancel">x</button>
@@ -104,7 +95,7 @@
                 </div>
             </div>
             <div>
-                <div class="editable-field-group" data-field="fqdn" data-label="FQDN" data-value="{{.FQDN}}">
+<div class="editable-field-group" data-field="fqdn" data-label="FQDN" data-value="{{.FQDN}}">
                     <label class="editable-label">FQDN:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
@@ -113,7 +104,7 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="nt_name" data-label="NT Name" data-value="{{.NTName}}">
+<div class="editable-field-group" data-field="nt_name" data-label="NT Name" data-value="{{.NTName}}">
                     <label class="editable-label">NT Name:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
@@ -122,7 +113,7 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="nt_domain" data-label="NT Domain" data-value="{{.NTDomain}}">
+<div class="editable-field-group" data-field="nt_domain" data-label="NT Domain" data-value="{{.NTDomain}}">
                     <label class="editable-label">NT Domain:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
@@ -131,7 +122,36 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="administrators" data-label="Administrators" data-value="{{.Administrators}}">
+<div class="editable-field-group" data-field="function" data-label="Function" data-value="{{.Function}}">
+                    <label class="editable-label">Function:</label>
+                    <span class="editable-value"></span>
+                    <input type="text" class="editable-input hidden">
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+            </div>
+            <div>
+<div class="editable-field-group" data-field="status" data-label="Status" data-value="{{.Status}}">
+                    <label class="editable-label">Status:</label>
+                    <span class="editable-value"></span>
+                    <select class="editable-input hidden"><option value="">(not set)</option>{{range $.Statuses}}<option value="{{.}}"{{if eq . $.Host.Status}} selected{{end}}>{{.}}</option>{{end}}</select>
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+<div class="editable-field-group" data-field="operation" data-label="Operation" data-value="{{.Operation}}">
+                    <label class="editable-label">Operation:</label>
+                    <span class="editable-value"></span>
+                    <select class="editable-input hidden">{{range $.Operations}}<option value="{{.}}"{{if eq . $.Host.Operation}} selected{{end}}>{{.}}</option>{{end}}</select>
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
+                </div>
+<div class="editable-field-group" data-field="administrators" data-label="Administrators" data-value="{{.Administrators}}">
                     <label class="editable-label">Administrators:</label>
                     <span class="editable-value"></span>
                     <textarea class="editable-input hidden" rows="4"></textarea>
@@ -140,7 +160,7 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="note" data-label="Note" data-value="{{.Note}}">
+<div class="editable-field-group" data-field="note" data-label="Note" data-value="{{.Note}}">
                     <label class="editable-label">Note:</label>
                     <span class="editable-value"></span>
                     <textarea class="editable-input hidden" rows="4"></textarea>

@@ -32,6 +32,8 @@ type Host struct {
 	MACAddress     string
 	MachineGUID    string
 	Hardware       string
+	Function       string
+	OS             string
 	Status         string
 	FQDN           string
 	NTName         string
@@ -60,13 +62,13 @@ func statusOptions() []string {
 }
 
 const hostColumns = `id, created_at, updated_at, created_by, updated_by, version,
-	ip_address, mac_address, machine_guid, hardware, status, fqdn, nt_name,
+	ip_address, mac_address, machine_guid, hardware, function, os, status, fqdn, nt_name,
 	nt_domain, operation, note, administrators`
 
 func scanHost(row interface{ Scan(...any) error }) (*Host, error) {
 	h := &Host{}
 	err := row.Scan(&h.ID, &h.CreatedAt, &h.UpdatedAt, &h.CreatedBy, &h.UpdatedBy,
-		&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineGUID, &h.Hardware,
+		&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineGUID, &h.Hardware, &h.Function, &h.OS,
 		&h.Status, &h.FQDN, &h.NTName, &h.NTDomain, &h.Operation, &h.Note,
 		&h.Administrators)
 	if err != nil {
@@ -97,6 +99,8 @@ func hostFromForm(r *http.Request) *Host {
 		MACAddress:     get("mac_address"),
 		MachineGUID:    get("machine_guid"),
 		Hardware:       get("hardware"),
+		Function:       get("function"),
+		OS:             get("os"),
 		Status:         get("status"),
 		FQDN:           get("fqdn"),
 		NTName:         get("nt_name"),
@@ -123,6 +127,8 @@ func validateHost(h *Host) string {
 		{"MAC address", h.MACAddress, maxShortFieldLen},
 		{"Machine GUID", h.MachineGUID, maxShortFieldLen},
 		{"Hardware", h.Hardware, maxShortFieldLen},
+		{"Function", h.Function, maxShortFieldLen},
+		{"OS", h.OS, maxShortFieldLen},
 		{"FQDN", h.FQDN, maxShortFieldLen},
 		{"NT name", h.NTName, maxShortFieldLen},
 		{"NT domain", h.NTDomain, maxShortFieldLen},
@@ -232,8 +238,8 @@ func (app *App) hostsHandler(w http.ResponseWriter, r *http.Request) {
 	var where []string
 	if q != "" {
 		like := "%" + likeEscaper.Replace(q) + "%"
-		where = append(where, "(ip_address LIKE ? ESCAPE '\\' OR fqdn LIKE ? ESCAPE '\\' OR nt_name LIKE ? ESCAPE '\\' OR operation LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR hardware LIKE ? ESCAPE '\\')")
-		args = append(args, like, like, like, like, like, like)
+		where = append(where, "(ip_address LIKE ? ESCAPE '\\' OR fqdn LIKE ? ESCAPE '\\' OR nt_name LIKE ? ESCAPE '\\' OR operation LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR hardware LIKE ? ESCAPE '\\' OR function LIKE ? ESCAPE '\\' OR os LIKE ? ESCAPE '\\')")
+		args = append(args, like, like, like, like, like, like, like, like)
 	}
 	if op != "" {
 		where = append(where, "operation = ?")
@@ -263,7 +269,7 @@ func (app *App) hostsHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		h := &Host{}
 		err := rows.Scan(&h.ID, &h.CreatedAt, &h.UpdatedAt, &h.CreatedBy, &h.UpdatedBy,
-			&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineGUID, &h.Hardware,
+			&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineGUID, &h.Hardware, &h.Function, &h.OS,
 			&h.Status, &h.FQDN, &h.NTName, &h.NTDomain, &h.Operation, &h.Note,
 			&h.Administrators)
 		if err != nil {
@@ -394,10 +400,10 @@ func (app *App) hostCreateHandler(w http.ResponseWriter, r *http.Request) {
 	now := nowString()
 	res, err := app.db.Exec(
 		`INSERT INTO hosts (id, created_at, updated_at, created_by, updated_by, version,
-			ip_address, mac_address, machine_guid, hardware, status, fqdn, nt_name,
+			ip_address, mac_address, machine_guid, hardware, function, os, status, fqdn, nt_name,
 			nt_domain, operation, note, administrators)
-		 VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		newID, now, now, sess.Username, sess.Username, h.IPAddress, h.MACAddress, h.MachineGUID, h.Hardware,
+		 VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		newID, now, now, sess.Username, sess.Username, h.IPAddress, h.MACAddress, h.MachineGUID, h.Hardware, h.Function, h.OS,
 		h.Status, h.FQDN, h.NTName, h.NTDomain, h.Operation, h.Note,
 		h.Administrators)
 	if err != nil {
@@ -469,11 +475,11 @@ func (app *App) hostUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	formVersion, _ := strconv.ParseInt(r.Form.Get("version"), 10, 64)
 	res, err := app.db.Exec(
 		`UPDATE hosts SET updated_at = ?, updated_by = ?, ip_address = ?, mac_address = ?,
-			machine_guid = ?, hardware = ?, status = ?, fqdn = ?, nt_name = ?, nt_domain = ?,
+			machine_guid = ?, hardware = ?, function = ?, os = ?, status = ?, fqdn = ?, nt_name = ?, nt_domain = ?,
 			operation = ?, note = ?, administrators = ?, version = version + 1
 		 WHERE id = ? AND version = ?`,
 		nowString(), sess.Username, h.IPAddress, h.MACAddress, h.MachineGUID,
-		h.Hardware, h.Status, h.FQDN, h.NTName, h.NTDomain, h.Operation, h.Note,
+		h.Hardware, h.Function, h.OS, h.Status, h.FQDN, h.NTName, h.NTDomain, h.Operation, h.Note,
 		h.Administrators, id, formVersion)
 	if err != nil {
 		log.Printf("update host: %v", err)
@@ -515,6 +521,8 @@ var hostFields = map[string]hostFieldDef{
 	"mac_address":    {"mac_address", "MAC address"},
 	"machine_guid":   {"machine_guid", "Machine GUID"},
 	"hardware":       {"hardware", "Hardware"},
+	"function":       {"function", "Function"},
+	"os":             {"os", "OS"},
 	"status":         {"status", "Status"},
 	"fqdn":           {"fqdn", "FQDN"},
 	"nt_name":        {"nt_name", "NT name"},
@@ -534,6 +542,10 @@ func hostFieldValue(h *Host, name string) string {
 		return h.MachineGUID
 	case "hardware":
 		return h.Hardware
+	case "function":
+		return h.Function
+	case "os":
+		return h.OS
 	case "status":
 		return h.Status
 	case "fqdn":
@@ -562,6 +574,10 @@ func setHostFieldValue(h *Host, name, value string) {
 		h.MachineGUID = value
 	case "hardware":
 		h.Hardware = value
+	case "function":
+		h.Function = value
+	case "os":
+		h.OS = value
 	case "status":
 		h.Status = value
 	case "fqdn":
@@ -611,7 +627,7 @@ func (app *App) hostFieldUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := 0
 	switch name {
-	case "mac_address", "machine_guid", "hardware", "fqdn", "nt_name", "nt_domain":
+	case "mac_address", "machine_guid", "hardware", "function", "os", "fqdn", "nt_name", "nt_domain":
 		limit = maxShortFieldLen
 	case "note", "administrators":
 		limit = maxLongFieldLen

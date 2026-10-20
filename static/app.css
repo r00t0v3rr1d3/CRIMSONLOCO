@@ -102,7 +102,9 @@ table.data-table th {
 table.data-table td { padding: 12px; border-bottom: 1px solid #333; vertical-align: top; }
 table.data-table tr:nth-child(even) { background-color: #252525; }
 table.data-table tr:hover { background-color: #2c2c2c; }
-.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px 40px; }
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 40px; }
+@media (max-width: 900px) { .detail-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .detail-grid { grid-template-columns: 1fr; } }
 .detail-item { display: flex; gap: 10px; margin-bottom: 12px; }
 .detail-label { font-weight: bold; min-width: 140px; color: #bbb; }
 .detail-value { white-space: pre-wrap; word-break: break-word; }
@@ -123,7 +125,7 @@ table.data-table tr:hover { background-color: #2c2c2c; }
 
 /* Click-to-edit fields on the host page */
 .editable-field-group { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
-.editable-label { font-weight: bold; min-width: 130px; padding-top: 8px; }
+.editable-label { font-weight: bold; min-width: 130px; padding-top: 8px; color: #f44336; }
 .editable-value { flex: 1; cursor: pointer; padding: 8px 10px; border: 1px solid transparent; border-radius: 4px; white-space: pre-wrap; word-break: break-word; min-height: 20px; }
 .editable-value:hover { background-color: #2c2c2c; }
 .editable-value-static { flex: 1; padding: 8px 10px; white-space: pre-wrap; word-break: break-word; min-height: 20px; }

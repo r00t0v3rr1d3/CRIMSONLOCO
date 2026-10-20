@@ -31,7 +31,7 @@ import (
 
 const Version = "1.1.0"
 
-const SchemaVersion = 8
+const SchemaVersion = 9
 
 const sessionLifetime = 8 * time.Hour
 
@@ -108,6 +108,8 @@ func initDB(db *sql.DB) error {
 			mac_address TEXT,
 			machine_guid TEXT,
 			hardware TEXT,
+			function TEXT,
+			os TEXT,
 			status TEXT,
 			fqdn TEXT,
 			nt_name TEXT,
