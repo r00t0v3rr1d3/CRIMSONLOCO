@@ -178,7 +178,7 @@
         {{if $.Tools}}
         <table class="data-table">
             <thead>
-                <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Size</th><th>Hash</th><th>Local Copy Path</th><th>Created</th><th>Last Modified</th><th></th></tr>
+                <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Created</th><th class="actions-cell"></th></tr>
             </thead>
             <tbody>
                 {{range $.Tools}}
@@ -189,11 +189,7 @@
                     <td>{{.Path}}</td>
                     <td>{{if .InMemory}}Yes{{if .PID}} (PID {{.PID}}){{end}}{{else}}No{{end}}</td>
                     <td>{{spacetime .TouchTime}}</td>
-                    <td>{{.Size}}</td>
-                    <td>{{.Hash}}</td>
-                    <td>{{.LocalCopyPath}}</td>
                     <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
-                    <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
                     <td>
                         <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/edit">Edit</a>
                         <form method="POST" action="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/remove" style="display:inline">
@@ -218,7 +214,7 @@
             <summary>Removed Tools ({{len $.RemovedTools}})</summary>
             <table class="data-table">
                 <thead>
-                    <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Size</th><th>Hash</th><th>Local Copy Path</th><th>Deleted Time</th><th>Created</th><th>Last Modified</th><th></th></tr>
+                    <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Removed Time</th><th>Created</th><th class="actions-cell"></th></tr>
                 </thead>
                 <tbody>
                     {{range $.RemovedTools}}
@@ -229,12 +225,8 @@
                         <td>{{.Path}}</td>
                         <td>{{if .InMemory}}Yes{{if .PID}} (PID {{.PID}}){{end}}{{else}}No{{end}}</td>
                         <td>{{spacetime .TouchTime}}</td>
-                        <td>{{.Size}}</td>
-                        <td>{{.Hash}}</td>
-                        <td>{{.LocalCopyPath}}</td>
-                        <td>{{spacetime .DeletedTime}}</td>
+                        <td>{{spacetime .RemovedTime}}</td>
                         <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
-                        <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
                         <td>
                             <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/edit">Edit</a>
                             {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/delete" onsubmit="return confirm('Delete this tool?');" style="display:inline">
@@ -255,7 +247,7 @@
         {{if $.Files}}
         <table class="data-table">
             <thead>
-                <tr><th>Path</th><th>Touch Time</th><th>Notes</th><th>Created</th><th>Last Modified</th><th></th></tr>
+                <tr><th>Path</th><th>Touch Time</th><th>Notes</th><th>Created</th><th class="actions-cell"></th></tr>
             </thead>
             <tbody>
                 {{range $.Files}}
@@ -264,9 +256,12 @@
                     <td>{{spacetime .TouchTime}}</td>
                     <td style="white-space:pre-wrap">{{.Notes}}</td>
                     <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
-                    <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
                     <td>
                         <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/files/{{.ID}}/edit">Edit</a>
+                        <form method="POST" action="/hostinfo/{{$.Host.ID}}/files/{{.ID}}/remove" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                            <button type="submit" class="btn btn-secondary">Remove</button>
+                        </form>
                         {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/files/{{.ID}}/delete" onsubmit="return confirm('Delete this file?');" style="display:inline">
                             <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
                             <button type="submit" class="btn btn-danger btn-small">Delete</button>
@@ -280,6 +275,34 @@
         <div class="form-actions">
             <a class="btn" href="/hostinfo/{{.ID}}/files/new">Add File</a>
         </div>
+        {{if $.RemovedFiles}}
+        <details class="removed-tools">
+            <summary>Removed Files ({{len $.RemovedFiles}})</summary>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Path</th><th>Touch Time</th><th>Notes</th><th>Removed Time</th><th>Created</th><th class="actions-cell"></th></tr>
+                </thead>
+                <tbody>
+                    {{range $.RemovedFiles}}
+                    <tr>
+                        <td>{{.Path}}</td>
+                        <td>{{spacetime .TouchTime}}</td>
+                        <td style="white-space:pre-wrap">{{.Notes}}</td>
+                        <td>{{spacetime .RemovedTime}}</td>
+                        <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
+                        <td>
+                            <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/files/{{.ID}}/edit">Edit</a>
+                            {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/files/{{.ID}}/delete" onsubmit="return confirm('Delete this file?');" style="display:inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+                                <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                            </form>{{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </details>
+        {{end}}
     </div>
 
     <div class="section-container">
@@ -287,7 +310,7 @@
         {{if $.CriticalPaths}}
         <table class="data-table">
             <thead>
-                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Date / Time</th><th>Notes</th><th>Created</th><th>Last Modified</th><th></th></tr>
+                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Date / Time</th><th>Notes</th><th>Created</th><th>Last Modified</th><th class="actions-cell"></th></tr>
             </thead>
             <tbody>
                 {{range $.CriticalPaths}}

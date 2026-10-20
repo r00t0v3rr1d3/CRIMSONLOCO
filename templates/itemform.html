@@ -58,6 +58,10 @@
             <div class="form-actions">
                 <button type="submit" class="btn">Save</button>
                 <a href="{{.BackURL}}" class="btn btn-secondary">Cancel</a>
+                {{if .RemoveURL}}<form method="POST" action="{{.RemoveURL}}" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+                    <button type="submit" class="btn btn-secondary">Remove</button>
+                </form>{{end}}
             </div>
         </form>
         {{range .Meta}}

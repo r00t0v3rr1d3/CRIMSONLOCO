@@ -142,7 +142,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	var tools []*ToolItem
 	toolClause, n := likeClause("name", "version", "local_copy_path", "path", "status",
-		"pid", "details", "touch_time", "size", "hash", "deleted_time")
+		"pid", "details", "touch_time", "size", "hash", "removed_time")
 	trows, err := app.db.Query("SELECT "+toolColumns+" FROM host_tools WHERE "+toolClause, repeatArg(pattern, n)...)
 	if err != nil {
 		log.Printf("global search tools: %v", err)
@@ -158,8 +158,9 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	trows.Close()
 
 	var files []*FileItem
-	fileClause, n := likeClause("path", "touch_time", "notes")
+	fileClause, n := likeClause("path", "touch_time", "notes", "hash", "local_copy_path", "removed_time")
 	frows, err := app.db.Query(`SELECT id, host_id, IFNULL(path,''), IFNULL(touch_time,''), IFNULL(notes,''),
+		IFNULL(hash,''), IFNULL(local_copy_path,''), IFNULL(removed_time,''),
 		IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
 		FROM host_files WHERE `+fileClause, repeatArg(pattern, n)...)
 	if err != nil {
@@ -169,7 +170,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for frows.Next() {
 		it := &FileItem{}
-		if err := frows.Scan(&it.ID, &it.HostID, &it.Path, &it.TouchTime, &it.Notes, &it.CreatedBy, &it.CreatedAt, &it.UpdatedBy, &it.UpdatedAt); err == nil {
+		if err := frows.Scan(&it.ID, &it.HostID, &it.Path, &it.TouchTime, &it.Notes, &it.Hash, &it.LocalCopyPath, &it.RemovedTime, &it.CreatedBy, &it.CreatedAt, &it.UpdatedBy, &it.UpdatedAt); err == nil {
 			files = append(files, it)
 			hostIDs[it.HostID] = true
 		}
@@ -259,12 +260,13 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 				{p + "Status", t.Status}, {p + "PID", t.PID},
 				{p + "Details", t.Details}, {p + "Touch Time", t.TouchTime},
 				{p + "Size", t.Size}, {p + "Hash", t.Hash},
-				{p + "Deleted Time", t.DeletedTime},
+				{p + "Removed Time", t.RemovedTime},
 			})
 		}
 		for _, f := range filesByHost[h.ID] {
 			addMatches(&res, [][2]string{
 				{"File Path", f.Path}, {"File Touch Time", f.TouchTime}, {"File Notes", f.Notes},
+				{"File Hash", f.Hash}, {"File Local Copy Path", f.LocalCopyPath}, {"File Removed Time", f.RemovedTime},
 			})
 		}
 		for _, cp := range cpsByHost[h.ID] {

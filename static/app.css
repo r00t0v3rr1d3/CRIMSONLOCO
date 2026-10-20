@@ -95,11 +95,12 @@ input:focus, select:focus, textarea:focus {
 .form-field input, .form-field select, .form-field textarea { width: 100%; }
 .form-field.wide { grid-column: 1 / -1; }
 .form-actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
-table.data-table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; }
+table.data-table { width: 100%; border-collapse: collapse; table-layout: fixed; background-color: #1e1e1e; }
 table.data-table th {
-    background-color: #2c2c2c; color: #f44336; padding: 12px; text-align: left;
+    background-color: #2c2c2c; color: #f44336; padding: 12px; text-align: left; overflow-wrap: anywhere;
 }
-table.data-table td { padding: 12px; border-bottom: 1px solid #333; vertical-align: top; }
+table.data-table td { padding: 12px; border-bottom: 1px solid #333; vertical-align: top; overflow-wrap: anywhere; }
+table.data-table th.actions-cell { width: 235px; }
 table.data-table tr:nth-child(even) { background-color: #252525; }
 table.data-table tr:hover { background-color: #2c2c2c; }
 .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 40px; }

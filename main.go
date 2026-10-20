@@ -33,7 +33,7 @@ import (
 
 const Version = "1.1.0"
 
-const SchemaVersion = 12
+const SchemaVersion = 13
 
 const sessionLifetime = 8 * time.Hour
 
@@ -134,7 +134,7 @@ func initDB(db *sql.DB) error {
 			touch_time TEXT,
 			size TEXT,
 			hash TEXT,
-			deleted_time TEXT,
+			removed_time TEXT,
 			created_by TEXT,
 			created_at TEXT NOT NULL,
 			updated_by TEXT,
@@ -147,6 +147,9 @@ func initDB(db *sql.DB) error {
 			path TEXT,
 			touch_time TEXT,
 			notes TEXT,
+			hash TEXT,
+			local_copy_path TEXT,
+			removed_time TEXT,
 			created_by TEXT,
 			created_at TEXT NOT NULL,
 			updated_by TEXT,
@@ -728,6 +731,7 @@ func main() {
 	mux.HandleFunc("GET /hostinfo/{id}/files/{itemID}/edit", app.requireAuth(app.fileFormHandler))
 	mux.HandleFunc("POST /hostinfo/{id}/files/{itemID}/edit", app.requireAuth(app.fileFormHandler))
 	mux.HandleFunc("POST /hostinfo/{id}/files/{itemID}/delete", app.requireAdmin(app.itemDelete(fileSpec)))
+	mux.HandleFunc("POST /hostinfo/{id}/files/{itemID}/remove", app.requireAuth(app.fileRemoveHandler))
 	mux.HandleFunc("POST /hostinfo/{id}/field", app.requireAuth(app.hostFieldUpdateHandler))
 
 	mux.HandleFunc("GET /operations/", app.requireAuth(app.operationsHandler))
