@@ -37,8 +37,7 @@ connecting to this server and not something in between.
 There is nothing to set up by hand. On startup the program:
 
 1. Creates the database file (`CRIMSONLOCO.db`) if it does not exist.
-2. Creates the tables if they are missing, and adds any missing columns to
-   tables that already exist (your data is kept).
+2. Creates the tables if they are missing.
 3. Creates an `admin` user if there are no users yet. Set the password
    yourself with the environment variable below, otherwise a random one is
    printed to the console once. After logging in, change it from the menu

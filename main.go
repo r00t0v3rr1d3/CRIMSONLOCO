@@ -10,6 +10,7 @@ import (
 	"crypto/x509/pkix"
 	"database/sql"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -20,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -250,9 +252,14 @@ func (app *App) render(w http.ResponseWriter, name string, data any) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := t.Execute(w, data); err != nil {
+	if err := t.Execute(w, data); err != nil && !isClientDisconnect(err) {
 		log.Printf("render %s: %v", name, err)
 	}
+}
+
+func isClientDisconnect(err error) bool {
+	return errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) ||
+		strings.Contains(err.Error(), "http2: stream closed") || strings.Contains(err.Error(), "client disconnected")
 }
 
 // ---------------------------------------------------------------------------
