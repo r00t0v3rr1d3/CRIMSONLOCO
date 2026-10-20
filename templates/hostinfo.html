@@ -39,6 +39,7 @@
     <div class="section-container">
         <div class="section-head">
             <h2>Host Info</h2>
+            <span class="muted host-meta">Created: {{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}} &middot; Updated: <span id="updatedMeta">{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</span></span>
             {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{.ID}}/delete" onsubmit="return confirm('Delete this host?');">
                 <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
                 <button type="submit" class="btn btn-danger">Delete Host</button>
@@ -130,15 +131,6 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group" data-field="note" data-label="Note" data-value="{{.Note}}">
-                    <label class="editable-label">Note:</label>
-                    <span class="editable-value"></span>
-                    <textarea class="editable-input hidden" rows="4"></textarea>
-                    <div class="action-buttons hidden">
-                        <button type="button" class="save-button" title="Save">&#10003;</button>
-                        <button type="button" class="cancel-button" title="Cancel">x</button>
-                    </div>
-                </div>
                 <div class="editable-field-group" data-field="administrators" data-label="Administrators" data-value="{{.Administrators}}">
                     <label class="editable-label">Administrators:</label>
                     <span class="editable-value"></span>
@@ -148,13 +140,14 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-                <div class="editable-field-group">
-                    <label class="editable-label">Created:</label>
-                    <span class="editable-value-static">{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</span>
-                </div>
-                <div class="editable-field-group">
-                    <label class="editable-label">Updated:</label>
-                    <span class="editable-value-static" id="updatedMeta">{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</span>
+                <div class="editable-field-group" data-field="note" data-label="Note" data-value="{{.Note}}">
+                    <label class="editable-label">Note:</label>
+                    <span class="editable-value"></span>
+                    <textarea class="editable-input hidden" rows="4"></textarea>
+                    <div class="action-buttons hidden">
+                        <button type="button" class="save-button" title="Save">&#10003;</button>
+                        <button type="button" class="cancel-button" title="Cancel">x</button>
+                    </div>
                 </div>
             </div>
         </div>

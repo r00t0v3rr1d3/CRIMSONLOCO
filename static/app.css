@@ -152,6 +152,7 @@ table.data-table tr:hover { background-color: #2c2c2c; }
 .sort-link:hover { color: #f44336; }
 .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .section-head h2 { margin-top: 0; }
+.host-meta { font-size: 13px; margin-left: auto; align-self: center; text-align: right; }
 .editable-value { display: inline-block; min-width: 80px; min-height: 1em; }
 .user-menu-link { display: block; padding: 8px 10px; color: #e0e0e0; text-decoration: none; border-radius: 4px; }
 .user-menu-link:hover { background-color: #2c2c2c; color: #fff; }
