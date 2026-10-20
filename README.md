@@ -67,12 +67,24 @@ different file: `./CRIMSONLOCO --config /path/to/other.conf`.
 
 Any setting can still be overridden for a single run on the command line,
 using the same names. Command line wins over the config file. Long options
-take two dashes, short options one dash and one letter:
+take two dashes, short options one dash and one letter. `./CRIMSONLOCO --help`
+prints:
 
 ```
--v, --version        -h, --help
---addr :8443         --db CRIMSONLOCO.db    --templates templates
---static static      --cert server.crt     --key server.key    --config PATH
+Usage: CRIMSONLOCO [options]
+
+  -v, --version          print the version and exit
+      --config PATH      config file (default CRIMSONLOCO.conf,
+                         created with defaults if missing)
+  -h, --help             print this help and exit
+      --addr :8443       listen address
+      --db PATH          sqlite database file (default CRIMSONLOCO.db)
+      --templates DIR    template directory (default templates)
+      --static DIR       static files directory (default static)
+      --cert PATH        TLS certificate file (default server.crt)
+      --key PATH         TLS key file (default server.key)
+
+Long options accept --addr :8443 and --addr=:8443 forms.
 ```
 
 ## Notes
