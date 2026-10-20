@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -143,8 +144,10 @@ func (app *App) operationDetailHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	cols := make([]opStatusColumn, 0, len(hostStatuses))
-	for _, st := range hostStatuses {
+	sorted := append([]string{}, hostStatuses...)
+	sort.Strings(sorted)
+	cols := make([]opStatusColumn, 0, len(sorted))
+	for _, st := range sorted {
 		cols = append(cols, opStatusColumn{
 			Status:  st,
 			Count:   counts[st],
