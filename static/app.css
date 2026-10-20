@@ -104,6 +104,7 @@ table.data-table th.actions-cell { width: 235px; }
 table.data-table tr:nth-child(even) { background-color: #252525; }
 table.data-table tr:hover { background-color: #2c2c2c; }
 .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 40px; }
+.detail-grid > div { display: grid; grid-template-columns: max-content 1fr; column-gap: 10px; row-gap: 12px; align-content: start; }
 @media (max-width: 900px) { .detail-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 620px) { .detail-grid { grid-template-columns: 1fr; } }
 .detail-item { display: flex; gap: 10px; margin-bottom: 12px; }
@@ -125,8 +126,8 @@ table.data-table tr:hover { background-color: #2c2c2c; }
 @media (max-width: 700px) { .detail-label { min-width: 110px; } }
 
 /* Click-to-edit fields on the host page */
-.editable-field-group { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
-.editable-label { font-weight: bold; min-width: 130px; padding-top: 8px; color: #f44336; }
+.editable-field-group { display: contents; }
+.editable-label { font-weight: bold; padding-top: 8px; color: #f44336; }
 .editable-value { flex: 1; cursor: pointer; padding: 8px 10px; border: 1px solid transparent; border-radius: 4px; white-space: pre-wrap; word-break: break-word; min-height: 20px; }
 .editable-value:hover { background-color: #2c2c2c; }
 .editable-value-static { flex: 1; padding: 8px 10px; white-space: pre-wrap; word-break: break-word; min-height: 20px; }
@@ -134,6 +135,7 @@ table.data-table tr:hover { background-color: #2c2c2c; }
 .editable-input { flex: 1; padding: 8px 10px; border: 1px solid #444; border-radius: 4px; box-sizing: border-box; background-color: #2c2c2c; color: #e0e0e0; font: inherit; }
 .editable-input:focus { outline: none; border-color: #f44336; }
 .action-buttons { display: flex; align-items: center; }
+.editable-field-group .action-buttons { grid-column: 2; justify-self: start; }
 .save-button, .cancel-button { border: none; color: white; padding: 8px 12px; font-size: 16px; cursor: pointer; border-radius: 4px; }
 .save-button { background-color: #4CAF50; }
 .save-button:hover { background-color: #45a049; }
