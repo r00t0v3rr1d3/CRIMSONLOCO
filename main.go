@@ -31,7 +31,7 @@ import (
 
 const Version = "1.1.0"
 
-const SchemaVersion = 11
+const SchemaVersion = 12
 
 const sessionLifetime = 8 * time.Hour
 
@@ -156,7 +156,7 @@ func initDB(db *sql.DB) error {
 			source_host TEXT,
 			method TEXT,
 			credentials TEXT,
-			occurred_at TEXT NOT NULL,
+			date_time TEXT NOT NULL,
 			notes TEXT,
 			created_by TEXT,
 			created_at TEXT NOT NULL,

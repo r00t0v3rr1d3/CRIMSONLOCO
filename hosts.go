@@ -772,7 +772,7 @@ type CriticalPath struct {
 	SourceHost  string
 	Method      string
 	Credentials string
-	OccurredAt  string
+	DateTime    string
 	Notes       string
 	CreatedBy   string
 	CreatedAt   string
@@ -794,10 +794,10 @@ func (app *App) hostInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cpRows, err := app.db.Query(
-		`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at,
+		`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), date_time,
 		        IFNULL(notes,''), IFNULL(created_by,''), created_at,
 		        IFNULL(updated_by,''), IFNULL(updated_at,'')
-		 FROM critical_paths WHERE host_id = ? ORDER BY occurred_at ASC`, id)
+		 FROM critical_paths WHERE host_id = ? ORDER BY date_time ASC`, id)
 	if err != nil {
 		http.Error(w, "query failed", http.StatusInternalServerError)
 		return
@@ -806,7 +806,7 @@ func (app *App) hostInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var paths []*CriticalPath
 	for cpRows.Next() {
 		cp := &CriticalPath{}
-		if err := cpRows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.OccurredAt, &cp.Notes, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
+		if err := cpRows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.DateTime, &cp.Notes, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
 			paths = append(paths, cp)
 		}
 	}
@@ -1381,11 +1381,11 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 	if cpID > 0 {
 		heading, action = "Edit Critical Path", back+"/critical-paths/"+strconv.FormatInt(cpID, 10)+"/edit"
 		row := app.db.QueryRow(
-			`SELECT id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at, IFNULL(notes,''),
+			`SELECT id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), date_time, IFNULL(notes,''),
 			        IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
 			 FROM critical_paths WHERE id = ? AND host_id = ?`, cpID, id)
 		current = &CriticalPath{HostID: id}
-		if err := row.Scan(&current.ID, &current.SourceHost, &current.Method, &current.Credentials, &current.OccurredAt, &current.Notes,
+		if err := row.Scan(&current.ID, &current.SourceHost, &current.Method, &current.Credentials, &current.DateTime, &current.Notes,
 			&current.CreatedBy, &current.CreatedAt, &current.UpdatedBy, &current.UpdatedAt); err == sql.ErrNoRows {
 			http.NotFound(w, r)
 			return
@@ -1406,7 +1406,7 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 		if current == nil {
 			return nil
 		}
-		return append([]string{"Occurred At: " + current.OccurredAt + " UTC"},
+		return append([]string{"Date / Time: " + current.DateTime + " UTC"},
 			auditMeta(current.CreatedBy, current.CreatedAt, current.UpdatedBy, current.UpdatedAt)...)
 	}
 	if r.Method == http.MethodPost {
@@ -1445,7 +1445,7 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 			itemID, err = app.newRandomID("critical_paths")
 			if err == nil {
 				_, err = app.db.Exec(
-					`INSERT INTO critical_paths (id, host_id, source_host, method, credentials, occurred_at, notes, created_by, created_at, updated_by, updated_at)
+					`INSERT INTO critical_paths (id, host_id, source_host, method, credentials, date_time, notes, created_by, created_at, updated_by, updated_at)
 					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 					itemID, id, source, method, credentials, now, notes, sess.Username, now, sess.Username, now)
 			}

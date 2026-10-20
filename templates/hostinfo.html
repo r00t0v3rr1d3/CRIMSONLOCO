@@ -287,7 +287,7 @@
         {{if $.CriticalPaths}}
         <table class="data-table">
             <thead>
-                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Occurred At</th><th>Notes</th><th>Created</th><th>Last Modified</th><th></th></tr>
+                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Date / Time</th><th>Notes</th><th>Created</th><th>Last Modified</th><th></th></tr>
             </thead>
             <tbody>
                 {{range $.CriticalPaths}}
@@ -295,7 +295,7 @@
                     <td>{{.SourceHost}}</td>
                     <td>{{.Method}}</td>
                     <td>{{.Credentials}}</td>
-                    <td>{{.OccurredAt}} UTC</td>
+                    <td>{{.DateTime}} UTC</td>
                     <td style="white-space:pre-wrap">{{.Notes}}</td>
                     <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
                     <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
