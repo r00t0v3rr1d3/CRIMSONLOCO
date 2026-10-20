@@ -724,6 +724,7 @@ type FileItem struct {
 	ID            int64
 	HostID        int64
 	Path          string
+	Status        string
 	TouchTime     string
 	Notes         string
 	Hash          string
@@ -745,7 +746,7 @@ type ToolItem struct {
 	Status        string
 	InMemory      bool
 	PID           string
-	Details       string
+	Notes         string
 	TouchTime     string
 	Size          string
 	Hash          string
@@ -758,8 +759,25 @@ type ToolItem struct {
 
 var toolStatuses = []string{"Success", "Installed", "Failed"}
 
-func toolStatusOptions() []string {
-	return append([]string{""}, toolStatuses...)
+// "Removed" is applied by the Remove action rather than chosen from the
+// list; it appears as an option only for a tool already carrying it, so
+// editing a removed tool does not drop the status.
+func validFileStatus(status string) bool {
+	for _, s := range toolStatusOptions("") {
+		if s == status {
+			return true
+		}
+	}
+	return false
+}
+
+func toolStatusOptions(current string) []string {
+	opts := []string{""}
+	opts = append(opts, toolStatuses...)
+	if current == "Removed" {
+		opts = append(opts, "Removed")
+	}
+	return opts
 }
 
 type CriticalPath struct {
@@ -856,7 +874,7 @@ func (app *App) newRandomID(table string) (int64, error) {
 
 const toolColumns = `id, host_id, IFNULL(name,''), IFNULL(version,''), IFNULL(local_copy_path,''),
 	IFNULL(path,''), IFNULL(status,''), IFNULL(in_memory,0), IFNULL(pid,''),
-	IFNULL(details,''), IFNULL(touch_time,''), IFNULL(size,''), IFNULL(hash,''),
+	IFNULL(notes,''), IFNULL(touch_time,''), IFNULL(size,''), IFNULL(hash,''),
 	IFNULL(removed_time,''), IFNULL(created_by,''), created_at,
 	IFNULL(updated_by,''), IFNULL(updated_at,'')`
 
@@ -864,7 +882,7 @@ func scanTool(rows *sql.Rows) (*ToolItem, error) {
 	it := &ToolItem{}
 	var inMemory int
 	err := rows.Scan(&it.ID, &it.HostID, &it.Name, &it.Version, &it.LocalCopyPath, &it.Path,
-		&it.Status, &inMemory, &it.PID, &it.Details, &it.TouchTime, &it.Size,
+		&it.Status, &inMemory, &it.PID, &it.Notes, &it.TouchTime, &it.Size,
 		&it.Hash, &it.RemovedTime, &it.CreatedBy, &it.CreatedAt, &it.UpdatedBy, &it.UpdatedAt)
 	it.InMemory = inMemory != 0
 	return it, err
@@ -882,7 +900,7 @@ func (app *App) hostTools(hostID int64) (active, removed []*ToolItem, err error)
 		if err != nil {
 			continue
 		}
-		if it.RemovedTime != "" {
+		if it.Status == "Removed" {
 			removed = append(removed, it)
 		} else {
 			active = append(active, it)
@@ -906,7 +924,7 @@ func (app *App) getTool(hostID, itemID int64) (*ToolItem, error) {
 
 func (app *App) hostFiles(hostID int64) (active, removed []*FileItem, err error) {
 	rows, err := app.db.Query(
-		`SELECT id, host_id, IFNULL(path,''), IFNULL(touch_time,''), IFNULL(notes,''),
+		`SELECT id, host_id, IFNULL(path,''), IFNULL(status,''), IFNULL(touch_time,''), IFNULL(notes,''),
 		        IFNULL(hash,''), IFNULL(local_copy_path,''), IFNULL(removed_time,''),
 		        IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
 		 FROM host_files WHERE host_id = ? ORDER BY created_at ASC`, hostID)
@@ -916,7 +934,7 @@ func (app *App) hostFiles(hostID int64) (active, removed []*FileItem, err error)
 	defer rows.Close()
 	for rows.Next() {
 		it := &FileItem{}
-		if err := rows.Scan(&it.ID, &it.HostID, &it.Path, &it.TouchTime, &it.Notes, &it.Hash, &it.LocalCopyPath, &it.RemovedTime, &it.CreatedBy, &it.CreatedAt, &it.UpdatedBy, &it.UpdatedAt); err == nil {
+		if err := rows.Scan(&it.ID, &it.HostID, &it.Path, &it.Status, &it.TouchTime, &it.Notes, &it.Hash, &it.LocalCopyPath, &it.RemovedTime, &it.CreatedBy, &it.CreatedAt, &it.UpdatedBy, &it.UpdatedAt); err == nil {
 			if it.RemovedTime != "" {
 				removed = append(removed, it)
 			} else {
@@ -1038,10 +1056,10 @@ func (app *App) toolFormHandler(w http.ResponseWriter, r *http.Request) {
 			{Label: "Tool Name", Name: "name", Value: t.Name, Kind: "text"},
 			{Label: "Version", Name: "version", Value: t.Version, Kind: "text"},
 			{Label: "Path", Name: "path", Value: t.Path, Kind: "text"},
-			{Label: "Status", Name: "status", Value: t.Status, Kind: "select", Options: toolStatusOptions()},
+			{Label: "Status", Name: "status", Value: t.Status, Kind: "select", Options: toolStatusOptions(t.Status)},
 			{Label: "In Memory", Name: "in_memory", Value: inMemory, Kind: "checkbox"},
 			{Label: "PID", Name: "pid", Value: t.PID, Kind: "text"},
-			{Label: "Details", Name: "details", Value: t.Details, Kind: "textarea"},
+			{Label: "Notes", Name: "notes", Value: t.Notes, Kind: "textarea"},
 			{Label: "Touch Time", Name: "touch_time", Value: t.TouchTime, Kind: "datetime"},
 			{Label: "Size", Name: "size", Value: t.Size, Kind: "text"},
 			{Label: "Hash", Name: "hash", Value: t.Hash, Kind: "text"},
@@ -1073,7 +1091,7 @@ func (app *App) toolFormHandler(w http.ResponseWriter, r *http.Request) {
 			Status:        strings.TrimSpace(r.FormValue("status")),
 			InMemory:      r.FormValue("in_memory") == "1",
 			PID:           strings.TrimSpace(r.FormValue("pid")),
-			Details:       strings.TrimSpace(r.FormValue("details")),
+			Notes:         strings.TrimSpace(r.FormValue("notes")),
 			TouchTime:     strings.TrimSpace(r.FormValue("touch_time")),
 			Size:          strings.TrimSpace(r.FormValue("size")),
 			Hash:          strings.TrimSpace(r.FormValue("hash")),
@@ -1081,13 +1099,19 @@ func (app *App) toolFormHandler(w http.ResponseWriter, r *http.Request) {
 		if !t.InMemory {
 			t.PID = ""
 		}
-		t.RemovedTime = r.FormValue("removed_time")
+		if current != nil && current.RemovedTime != "" {
+			t.RemovedTime = r.FormValue("removed_time")
+		}
 		errMsg := ""
 		if t.Name == "" {
 			errMsg = "Tool Name is required."
 		} else {
 			valid := false
-			for _, s := range toolStatusOptions() {
+			currentStatus := ""
+			if current != nil {
+				currentStatus = current.Status
+			}
+			for _, s := range toolStatusOptions(currentStatus) {
 				if s == t.Status {
 					valid = true
 				}
@@ -1108,7 +1132,7 @@ func (app *App) toolFormHandler(w http.ResponseWriter, r *http.Request) {
 				{"Version", t.Version, maxShortFieldLen},
 				{"Path", t.Path, maxPathFieldLen},
 				{"Local Copy Path", t.LocalCopyPath, maxPathFieldLen},
-				{"Details", t.Details, maxLongFieldLen},
+				{"Notes", t.Notes, maxLongFieldLen},
 				{"Hash", t.Hash, maxShortFieldLen},
 			} {
 				if msg := checkFieldLen(f.label, f.value, f.max); msg != "" {
@@ -1118,12 +1142,18 @@ func (app *App) toolFormHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		removedValue := ""
-		if errMsg == "" {
-			v, ok := storedRemovedTime(r.FormValue("removed_time"))
-			if !ok {
-				errMsg = "Removed Time is not valid."
-			} else {
-				removedValue = v
+		removedChanged := false
+		if errMsg == "" && current != nil && current.RemovedTime != "" {
+			if _, present := r.Form["removed_time"]; present {
+				v, ok := storedRemovedTime(r.FormValue("removed_time"))
+				if !ok {
+					errMsg = "Removed Time is not valid."
+				} else {
+					removedValue, removedChanged = v, true
+				}
+			}
+			if t.Status != "Removed" {
+				removedValue, removedChanged = "", true
 			}
 		}
 		if errMsg != "" {
@@ -1146,22 +1176,31 @@ func (app *App) toolFormHandler(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				_, err = app.db.Exec(
 					`INSERT INTO host_tools (id, host_id, name, version, local_copy_path, path, status,
-						in_memory, pid, details, touch_time, size, hash, removed_time,
+						in_memory, pid, notes, touch_time, size, hash,
 						created_by, created_at, updated_by, updated_at)
-					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 					newID, id, t.Name, t.Version, t.LocalCopyPath, t.Path, t.Status,
-					inMemory, t.PID, t.Details, t.TouchTime, t.Size, t.Hash, removedValue,
+					inMemory, t.PID, t.Notes, t.TouchTime, t.Size, t.Hash,
 					sess.Username, now, sess.Username, now)
 			}
-		} else {
+		} else if removedChanged {
 			_, err = app.db.Exec(
 				`UPDATE host_tools SET name = ?, version = ?, local_copy_path = ?, path = ?, status = ?,
-					in_memory = ?, pid = ?, details = ?, touch_time = ?, size = ?, hash = ?,
+					in_memory = ?, pid = ?, notes = ?, touch_time = ?, size = ?, hash = ?,
 					removed_time = ?, updated_by = ?, updated_at = ?
 				 WHERE id = ? AND host_id = ?`,
 				t.Name, t.Version, t.LocalCopyPath, t.Path, t.Status,
-				inMemory, t.PID, t.Details, t.TouchTime, t.Size, t.Hash,
+				inMemory, t.PID, t.Notes, t.TouchTime, t.Size, t.Hash,
 				removedValue, sess.Username, now, itemID, id)
+		} else {
+			_, err = app.db.Exec(
+				`UPDATE host_tools SET name = ?, version = ?, local_copy_path = ?, path = ?, status = ?,
+					in_memory = ?, pid = ?, notes = ?, touch_time = ?, size = ?, hash = ?,
+					updated_by = ?, updated_at = ?
+				 WHERE id = ? AND host_id = ?`,
+				t.Name, t.Version, t.LocalCopyPath, t.Path, t.Status,
+				inMemory, t.PID, t.Notes, t.TouchTime, t.Size, t.Hash,
+				sess.Username, now, itemID, id)
 		}
 		if err != nil {
 			log.Printf("save tool: %v", err)
@@ -1196,7 +1235,7 @@ func (app *App) toolRemoveHandler(w http.ResponseWriter, r *http.Request) {
 	sess := sessionFrom(r)
 	now := nowString()
 	if _, err := app.db.Exec(
-		`UPDATE host_tools SET removed_time = ?, updated_by = ?, updated_at = ?
+		`UPDATE host_tools SET status = 'Removed', removed_time = ?, updated_by = ?, updated_at = ?
 		 WHERE id = ? AND host_id = ?`, now, sess.Username, now, itemID, id); err != nil {
 		log.Printf("remove tool: %v", err)
 		http.Error(w, "could not remove", http.StatusInternalServerError)
@@ -1241,6 +1280,7 @@ func (app *App) fileFormHandler(w http.ResponseWriter, r *http.Request) {
 	fields := func(f *FileItem) []itemField {
 		return []itemField{
 			{Label: "Path", Name: "path", Value: f.Path, Kind: "text"},
+			{Label: "Status", Name: "status", Value: f.Status, Kind: "select", Options: toolStatusOptions(f.Status)},
 			{Label: "Touch Time", Name: "touch_time", Value: f.TouchTime, Kind: "datetime"},
 			{Label: "Notes", Name: "notes", Value: f.Notes, Kind: "textarea"},
 			{Label: "Hash", Name: "hash", Value: f.Hash, Kind: "text"},
@@ -1259,6 +1299,7 @@ func (app *App) fileFormHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		f := &FileItem{
 			Path:          strings.TrimSpace(r.FormValue("path")),
+			Status:        strings.TrimSpace(r.FormValue("status")),
 			TouchTime:     strings.TrimSpace(r.FormValue("touch_time")),
 			Notes:         strings.TrimSpace(r.FormValue("notes")),
 			Hash:          strings.TrimSpace(r.FormValue("hash")),
@@ -1268,6 +1309,8 @@ func (app *App) fileFormHandler(w http.ResponseWriter, r *http.Request) {
 		removedValue := ""
 		if f.Path == "" {
 			errMsg = "Path is required."
+		} else if !validFileStatus(f.Status) {
+			errMsg = "Status is not valid."
 		} else if msg := checkFieldLen("Path", f.Path, maxPathFieldLen); msg != "" {
 			errMsg = msg
 		} else if msg := checkFieldLen("Notes", f.Notes, maxLongFieldLen); msg != "" {
@@ -1301,13 +1344,13 @@ func (app *App) fileFormHandler(w http.ResponseWriter, r *http.Request) {
 			itemID, err = app.newRandomID("host_files")
 			if err == nil {
 				_, err = app.db.Exec(
-					`INSERT INTO host_files (id, host_id, path, touch_time, notes, hash, local_copy_path, removed_time, created_by, created_at, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-					itemID, id, f.Path, f.TouchTime, f.Notes, f.Hash, f.LocalCopyPath, removedValue, sess.Username, now, sess.Username, now)
+					`INSERT INTO host_files (id, host_id, path, status, touch_time, notes, hash, local_copy_path, removed_time, created_by, created_at, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+					itemID, id, f.Path, f.Status, f.TouchTime, f.Notes, f.Hash, f.LocalCopyPath, removedValue, sess.Username, now, sess.Username, now)
 			}
 		} else {
 			_, err = app.db.Exec(
-				`UPDATE host_files SET path = ?, touch_time = ?, notes = ?, hash = ?, local_copy_path = ?, removed_time = ?, updated_by = ?, updated_at = ? WHERE id = ? AND host_id = ?`,
-				f.Path, f.TouchTime, f.Notes, f.Hash, f.LocalCopyPath, removedValue, sess.Username, now, itemID, id)
+				`UPDATE host_files SET path = ?, status = ?, touch_time = ?, notes = ?, hash = ?, local_copy_path = ?, removed_time = ?, updated_by = ?, updated_at = ? WHERE id = ? AND host_id = ?`,
+				f.Path, f.Status, f.TouchTime, f.Notes, f.Hash, f.LocalCopyPath, removedValue, sess.Username, now, itemID, id)
 		}
 		if err != nil {
 			log.Printf("save file: %v", err)

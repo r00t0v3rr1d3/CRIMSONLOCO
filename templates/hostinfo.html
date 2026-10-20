@@ -178,17 +178,18 @@
         {{if $.Tools}}
         <table class="data-table">
             <thead>
-                <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Created</th><th class="actions-cell"></th></tr>
+                <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Notes</th><th>Created</th><th class="actions-cell"></th></tr>
             </thead>
             <tbody>
                 {{range $.Tools}}
                 <tr>
-                    <td>{{.Name}}{{if .Details}}<div style="white-space:pre-wrap">{{.Details}}</div>{{end}}</td>
+                    <td>{{.Name}}</td>
                     <td>{{.Version}}</td>
                     <td>{{.Status}}</td>
                     <td>{{.Path}}</td>
                     <td>{{if .InMemory}}Yes{{if .PID}} (PID {{.PID}}){{end}}{{else}}No{{end}}</td>
                     <td>{{spacetime .TouchTime}}</td>
+                    <td style="white-space:pre-wrap">{{.Notes}}</td>
                     <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
                     <td>
                         <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/tools/{{.ID}}/edit">Edit</a>
@@ -214,17 +215,18 @@
             <summary>Removed Tools ({{len $.RemovedTools}})</summary>
             <table class="data-table">
                 <thead>
-                    <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Removed Time</th><th>Created</th><th class="actions-cell"></th></tr>
+                    <tr><th>Tool Name</th><th>Version</th><th>Status</th><th>Path</th><th>In Memory</th><th>Touch Time</th><th>Notes</th><th>Removed Time</th><th>Created</th><th class="actions-cell"></th></tr>
                 </thead>
                 <tbody>
                     {{range $.RemovedTools}}
                     <tr>
-                        <td>{{.Name}}{{if .Details}}<div style="white-space:pre-wrap">{{.Details}}</div>{{end}}</td>
+                        <td>{{.Name}}</td>
                         <td>{{.Version}}</td>
                         <td>{{.Status}}</td>
                         <td>{{.Path}}</td>
                         <td>{{if .InMemory}}Yes{{if .PID}} (PID {{.PID}}){{end}}{{else}}No{{end}}</td>
                         <td>{{spacetime .TouchTime}}</td>
+                        <td style="white-space:pre-wrap">{{.Notes}}</td>
                         <td>{{spacetime .RemovedTime}}</td>
                         <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
                         <td>
@@ -247,12 +249,13 @@
         {{if $.Files}}
         <table class="data-table">
             <thead>
-                <tr><th>Path</th><th>Touch Time</th><th>Notes</th><th>Created</th><th class="actions-cell"></th></tr>
+                <tr><th>Path</th><th>Status</th><th>Touch Time</th><th>Notes</th><th>Created</th><th class="actions-cell"></th></tr>
             </thead>
             <tbody>
                 {{range $.Files}}
                 <tr>
                     <td>{{.Path}}</td>
+                    <td>{{.Status}}</td>
                     <td>{{spacetime .TouchTime}}</td>
                     <td style="white-space:pre-wrap">{{.Notes}}</td>
                     <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
@@ -280,12 +283,13 @@
             <summary>Removed Files ({{len $.RemovedFiles}})</summary>
             <table class="data-table">
                 <thead>
-                    <tr><th>Path</th><th>Touch Time</th><th>Notes</th><th>Removed Time</th><th>Created</th><th class="actions-cell"></th></tr>
+                    <tr><th>Path</th><th>Status</th><th>Touch Time</th><th>Notes</th><th>Removed Time</th><th>Created</th><th class="actions-cell"></th></tr>
                 </thead>
                 <tbody>
                     {{range $.RemovedFiles}}
                     <tr>
                         <td>{{.Path}}</td>
+                        <td>{{.Status}}</td>
                         <td>{{spacetime .TouchTime}}</td>
                         <td style="white-space:pre-wrap">{{.Notes}}</td>
                         <td>{{spacetime .RemovedTime}}</td>
@@ -310,7 +314,7 @@
         {{if $.CriticalPaths}}
         <table class="data-table">
             <thead>
-                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Date / Time</th><th>Notes</th><th>Created</th><th>Last Modified</th><th class="actions-cell"></th></tr>
+                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Date / Time</th><th>Notes</th><th>Created</th><th class="actions-cell"></th></tr>
             </thead>
             <tbody>
                 {{range $.CriticalPaths}}
@@ -321,7 +325,6 @@
                     <td>{{.DateTime}} UTC</td>
                     <td style="white-space:pre-wrap">{{.Notes}}</td>
                     <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
-                    <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
                     <td>
                         <a class="btn btn-secondary" href="/hostinfo/{{$.Host.ID}}/critical-paths/{{.ID}}/edit">Edit</a>
                         {{if $.IsAdmin}}<form method="POST" action="/hostinfo/{{$.Host.ID}}/critical-paths/{{.ID}}/delete" onsubmit="return confirm('Delete this critical path entry?');" style="display:inline">

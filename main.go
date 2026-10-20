@@ -33,7 +33,7 @@ import (
 
 const Version = "1.1.0"
 
-const SchemaVersion = 13
+const SchemaVersion = 14
 
 const sessionLifetime = 8 * time.Hour
 
@@ -130,7 +130,7 @@ func initDB(db *sql.DB) error {
 			status TEXT,
 			in_memory INTEGER NOT NULL DEFAULT 0,
 			pid TEXT,
-			details TEXT,
+			notes TEXT,
 			touch_time TEXT,
 			size TEXT,
 			hash TEXT,
@@ -145,6 +145,7 @@ func initDB(db *sql.DB) error {
 			host_id INTEGER NOT NULL REFERENCES hosts(id) ON DELETE CASCADE,
 			name TEXT,
 			path TEXT,
+			status TEXT,
 			touch_time TEXT,
 			notes TEXT,
 			hash TEXT,
