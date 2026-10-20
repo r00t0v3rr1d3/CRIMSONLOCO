@@ -49,7 +49,7 @@
         <div class="detail-grid">
             <div>
 <div class="editable-field-group" data-field="ip_address" data-label="IP" data-value="{{.IPAddress}}">
-                    <label class="editable-label">IP:</label>
+                    <label class="editable-label">IP Address:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
                     <div class="action-buttons hidden">
@@ -66,8 +66,8 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-<div class="editable-field-group" data-field="machine_guid" data-label="Machine GUID" data-value="{{.MachineGUID}}">
-                    <label class="editable-label">Machine GUID:</label>
+<div class="editable-field-group" data-field="machine_id" data-label="Machine ID" data-value="{{.MachineID}}">
+                    <label class="editable-label">Machine ID:</label>
                     <span class="editable-value"></span>
                     <input type="text" class="editable-input hidden">
                     <div class="action-buttons hidden">
@@ -122,10 +122,10 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-<div class="editable-field-group" data-field="function" data-label="Function" data-value="{{.Function}}">
-                    <label class="editable-label">Function:</label>
+<div class="editable-field-group" data-field="administrators" data-label="Administrators" data-value="{{.Administrators}}">
+                    <label class="editable-label">Administrators:</label>
                     <span class="editable-value"></span>
-                    <input type="text" class="editable-input hidden">
+                    <textarea class="editable-input hidden" rows="4"></textarea>
                     <div class="action-buttons hidden">
                         <button type="button" class="save-button" title="Save">&#10003;</button>
                         <button type="button" class="cancel-button" title="Cancel">x</button>
@@ -151,17 +151,17 @@
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-<div class="editable-field-group" data-field="administrators" data-label="Administrators" data-value="{{.Administrators}}">
-                    <label class="editable-label">Administrators:</label>
+<div class="editable-field-group" data-field="function" data-label="Function" data-value="{{.Function}}">
+                    <label class="editable-label">Function:</label>
                     <span class="editable-value"></span>
-                    <textarea class="editable-input hidden" rows="4"></textarea>
+                    <input type="text" class="editable-input hidden">
                     <div class="action-buttons hidden">
                         <button type="button" class="save-button" title="Save">&#10003;</button>
                         <button type="button" class="cancel-button" title="Cancel">x</button>
                     </div>
                 </div>
-<div class="editable-field-group" data-field="note" data-label="Note" data-value="{{.Note}}">
-                    <label class="editable-label">Note:</label>
+<div class="editable-field-group" data-field="notes" data-label="Notes" data-value="{{.Notes}}">
+                    <label class="editable-label">Notes:</label>
                     <span class="editable-value"></span>
                     <textarea class="editable-input hidden" rows="4"></textarea>
                     <div class="action-buttons hidden">
@@ -287,7 +287,7 @@
         {{if $.CriticalPaths}}
         <table class="data-table">
             <thead>
-                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Date / Time</th><th>Note</th><th>Created</th><th>Last Modified</th><th></th></tr>
+                <tr><th>Source Host</th><th>Method</th><th>Credentials</th><th>Occurred At</th><th>Notes</th><th>Created</th><th>Last Modified</th><th></th></tr>
             </thead>
             <tbody>
                 {{range $.CriticalPaths}}
@@ -296,7 +296,7 @@
                     <td>{{.Method}}</td>
                     <td>{{.Credentials}}</td>
                     <td>{{.OccurredAt}} UTC</td>
-                    <td style="white-space:pre-wrap">{{.Note}}</td>
+                    <td style="white-space:pre-wrap">{{.Notes}}</td>
                     <td>{{.CreatedAt}} UTC{{if .CreatedBy}} by {{.CreatedBy}}{{end}}</td>
                     <td>{{.UpdatedAt}} UTC{{if .UpdatedBy}} by {{.UpdatedBy}}{{end}}</td>
                     <td>

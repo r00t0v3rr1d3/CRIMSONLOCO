@@ -30,7 +30,7 @@ type Host struct {
 	Version        int64
 	IPAddress      string
 	MACAddress     string
-	MachineGUID    string
+	MachineID      string
 	Hardware       string
 	Function       string
 	OS             string
@@ -39,7 +39,7 @@ type Host struct {
 	NTName         string
 	NTDomain       string
 	Operation      string
-	Note           string
+	Notes          string
 	Administrators string
 }
 
@@ -62,14 +62,14 @@ func statusOptions() []string {
 }
 
 const hostColumns = `id, created_at, updated_at, created_by, updated_by, version,
-	ip_address, mac_address, machine_guid, hardware, function, os, status, fqdn, nt_name,
-	nt_domain, operation, note, administrators`
+	ip_address, mac_address, machine_id, hardware, function, os, status, fqdn, nt_name,
+	nt_domain, operation, notes, administrators`
 
 func scanHost(row interface{ Scan(...any) error }) (*Host, error) {
 	h := &Host{}
 	err := row.Scan(&h.ID, &h.CreatedAt, &h.UpdatedAt, &h.CreatedBy, &h.UpdatedBy,
-		&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineGUID, &h.Hardware, &h.Function, &h.OS,
-		&h.Status, &h.FQDN, &h.NTName, &h.NTDomain, &h.Operation, &h.Note,
+		&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineID, &h.Hardware, &h.Function, &h.OS,
+		&h.Status, &h.FQDN, &h.NTName, &h.NTDomain, &h.Operation, &h.Notes,
 		&h.Administrators)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func hostFromForm(r *http.Request) *Host {
 	h := &Host{
 		IPAddress:      get("ip_address"),
 		MACAddress:     get("mac_address"),
-		MachineGUID:    get("machine_guid"),
+		MachineID:      get("machine_id"),
 		Hardware:       get("hardware"),
 		Function:       get("function"),
 		OS:             get("os"),
@@ -106,7 +106,7 @@ func hostFromForm(r *http.Request) *Host {
 		NTName:         get("nt_name"),
 		NTDomain:       get("nt_domain"),
 		Operation:      get("operation"),
-		Note:           get("note"),
+		Notes:          get("notes"),
 		Administrators: get("administrators"),
 	}
 	return h
@@ -124,15 +124,15 @@ func validateHost(h *Host) string {
 		value string
 		max   int
 	}{
-		{"MAC address", h.MACAddress, maxShortFieldLen},
-		{"Machine GUID", h.MachineGUID, maxShortFieldLen},
+		{"MAC Address", h.MACAddress, maxShortFieldLen},
+		{"Machine ID", h.MachineID, maxShortFieldLen},
 		{"Hardware", h.Hardware, maxShortFieldLen},
 		{"Function", h.Function, maxShortFieldLen},
 		{"OS", h.OS, maxShortFieldLen},
 		{"FQDN", h.FQDN, maxShortFieldLen},
-		{"NT name", h.NTName, maxShortFieldLen},
-		{"NT domain", h.NTDomain, maxShortFieldLen},
-		{"Note", h.Note, maxLongFieldLen},
+		{"NT Name", h.NTName, maxShortFieldLen},
+		{"NT Domain", h.NTDomain, maxShortFieldLen},
+		{"Notes", h.Notes, maxLongFieldLen},
 		{"Administrators", h.Administrators, maxLongFieldLen},
 	} {
 		if msg := checkFieldLen(f.label, f.value, f.max); msg != "" {
@@ -238,7 +238,7 @@ func (app *App) hostsHandler(w http.ResponseWriter, r *http.Request) {
 	var where []string
 	if q != "" {
 		like := "%" + likeEscaper.Replace(q) + "%"
-		where = append(where, "(ip_address LIKE ? ESCAPE '\\' OR fqdn LIKE ? ESCAPE '\\' OR nt_name LIKE ? ESCAPE '\\' OR operation LIKE ? ESCAPE '\\' OR note LIKE ? ESCAPE '\\' OR hardware LIKE ? ESCAPE '\\' OR function LIKE ? ESCAPE '\\' OR os LIKE ? ESCAPE '\\')")
+		where = append(where, "(ip_address LIKE ? ESCAPE '\\' OR fqdn LIKE ? ESCAPE '\\' OR nt_name LIKE ? ESCAPE '\\' OR operation LIKE ? ESCAPE '\\' OR notes LIKE ? ESCAPE '\\' OR hardware LIKE ? ESCAPE '\\' OR function LIKE ? ESCAPE '\\' OR os LIKE ? ESCAPE '\\')")
 		args = append(args, like, like, like, like, like, like, like, like)
 	}
 	if op != "" {
@@ -269,8 +269,8 @@ func (app *App) hostsHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		h := &Host{}
 		err := rows.Scan(&h.ID, &h.CreatedAt, &h.UpdatedAt, &h.CreatedBy, &h.UpdatedBy,
-			&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineGUID, &h.Hardware, &h.Function, &h.OS,
-			&h.Status, &h.FQDN, &h.NTName, &h.NTDomain, &h.Operation, &h.Note,
+			&h.Version, &h.IPAddress, &h.MACAddress, &h.MachineID, &h.Hardware, &h.Function, &h.OS,
+			&h.Status, &h.FQDN, &h.NTName, &h.NTDomain, &h.Operation, &h.Notes,
 			&h.Administrators)
 		if err != nil {
 			log.Printf("scan host: %v", err)
@@ -400,11 +400,11 @@ func (app *App) hostCreateHandler(w http.ResponseWriter, r *http.Request) {
 	now := nowString()
 	res, err := app.db.Exec(
 		`INSERT INTO hosts (id, created_at, updated_at, created_by, updated_by, version,
-			ip_address, mac_address, machine_guid, hardware, function, os, status, fqdn, nt_name,
-			nt_domain, operation, note, administrators)
+			ip_address, mac_address, machine_id, hardware, function, os, status, fqdn, nt_name,
+			nt_domain, operation, notes, administrators)
 		 VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		newID, now, now, sess.Username, sess.Username, h.IPAddress, h.MACAddress, h.MachineGUID, h.Hardware, h.Function, h.OS,
-		h.Status, h.FQDN, h.NTName, h.NTDomain, h.Operation, h.Note,
+		newID, now, now, sess.Username, sess.Username, h.IPAddress, h.MACAddress, h.MachineID, h.Hardware, h.Function, h.OS,
+		h.Status, h.FQDN, h.NTName, h.NTDomain, h.Operation, h.Notes,
 		h.Administrators)
 	if err != nil {
 		log.Printf("create host: %v", err)
@@ -475,11 +475,11 @@ func (app *App) hostUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	formVersion, _ := strconv.ParseInt(r.Form.Get("version"), 10, 64)
 	res, err := app.db.Exec(
 		`UPDATE hosts SET updated_at = ?, updated_by = ?, ip_address = ?, mac_address = ?,
-			machine_guid = ?, hardware = ?, function = ?, os = ?, status = ?, fqdn = ?, nt_name = ?, nt_domain = ?,
-			operation = ?, note = ?, administrators = ?, version = version + 1
+			machine_id = ?, hardware = ?, function = ?, os = ?, status = ?, fqdn = ?, nt_name = ?, nt_domain = ?,
+			operation = ?, notes = ?, administrators = ?, version = version + 1
 		 WHERE id = ? AND version = ?`,
-		nowString(), sess.Username, h.IPAddress, h.MACAddress, h.MachineGUID,
-		h.Hardware, h.Function, h.OS, h.Status, h.FQDN, h.NTName, h.NTDomain, h.Operation, h.Note,
+		nowString(), sess.Username, h.IPAddress, h.MACAddress, h.MachineID,
+		h.Hardware, h.Function, h.OS, h.Status, h.FQDN, h.NTName, h.NTDomain, h.Operation, h.Notes,
 		h.Administrators, id, formVersion)
 	if err != nil {
 		log.Printf("update host: %v", err)
@@ -517,18 +517,18 @@ type hostFieldDef struct {
 }
 
 var hostFields = map[string]hostFieldDef{
-	"ip_address":     {"ip_address", "IP"},
-	"mac_address":    {"mac_address", "MAC address"},
-	"machine_guid":   {"machine_guid", "Machine GUID"},
+	"ip_address":     {"ip_address", "IP Address"},
+	"mac_address":    {"mac_address", "MAC Address"},
+	"machine_id":     {"machine_id", "Machine ID"},
 	"hardware":       {"hardware", "Hardware"},
 	"function":       {"function", "Function"},
 	"os":             {"os", "OS"},
 	"status":         {"status", "Status"},
 	"fqdn":           {"fqdn", "FQDN"},
-	"nt_name":        {"nt_name", "NT name"},
-	"nt_domain":      {"nt_domain", "NT domain"},
+	"nt_name":        {"nt_name", "NT Name"},
+	"nt_domain":      {"nt_domain", "NT Domain"},
 	"operation":      {"operation", "Operation"},
-	"note":           {"note", "Note"},
+	"notes":          {"notes", "Notes"},
 	"administrators": {"administrators", "Administrators"},
 }
 
@@ -538,8 +538,8 @@ func hostFieldValue(h *Host, name string) string {
 		return h.IPAddress
 	case "mac_address":
 		return h.MACAddress
-	case "machine_guid":
-		return h.MachineGUID
+	case "machine_id":
+		return h.MachineID
 	case "hardware":
 		return h.Hardware
 	case "function":
@@ -556,8 +556,8 @@ func hostFieldValue(h *Host, name string) string {
 		return h.NTDomain
 	case "operation":
 		return h.Operation
-	case "note":
-		return h.Note
+	case "notes":
+		return h.Notes
 	case "administrators":
 		return h.Administrators
 	}
@@ -570,8 +570,8 @@ func setHostFieldValue(h *Host, name, value string) {
 		h.IPAddress = value
 	case "mac_address":
 		h.MACAddress = value
-	case "machine_guid":
-		h.MachineGUID = value
+	case "machine_id":
+		h.MachineID = value
 	case "hardware":
 		h.Hardware = value
 	case "function":
@@ -588,8 +588,8 @@ func setHostFieldValue(h *Host, name, value string) {
 		h.NTDomain = value
 	case "operation":
 		h.Operation = value
-	case "note":
-		h.Note = value
+	case "notes":
+		h.Notes = value
 	case "administrators":
 		h.Administrators = value
 	}
@@ -627,9 +627,9 @@ func (app *App) hostFieldUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := 0
 	switch name {
-	case "mac_address", "machine_guid", "hardware", "function", "os", "fqdn", "nt_name", "nt_domain":
+	case "mac_address", "machine_id", "hardware", "function", "os", "fqdn", "nt_name", "nt_domain":
 		limit = maxShortFieldLen
-	case "note", "administrators":
+	case "notes", "administrators":
 		limit = maxLongFieldLen
 	}
 	if limit > 0 {
@@ -773,7 +773,7 @@ type CriticalPath struct {
 	Method      string
 	Credentials string
 	OccurredAt  string
-	Note        string
+	Notes       string
 	CreatedBy   string
 	CreatedAt   string
 	UpdatedBy   string
@@ -795,7 +795,7 @@ func (app *App) hostInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cpRows, err := app.db.Query(
 		`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at,
-		        IFNULL(note,''), IFNULL(created_by,''), created_at,
+		        IFNULL(notes,''), IFNULL(created_by,''), created_at,
 		        IFNULL(updated_by,''), IFNULL(updated_at,'')
 		 FROM critical_paths WHERE host_id = ? ORDER BY occurred_at ASC`, id)
 	if err != nil {
@@ -806,7 +806,7 @@ func (app *App) hostInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var paths []*CriticalPath
 	for cpRows.Next() {
 		cp := &CriticalPath{}
-		if err := cpRows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.OccurredAt, &cp.Note, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
+		if err := cpRows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.OccurredAt, &cp.Notes, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
 			paths = append(paths, cp)
 		}
 	}
@@ -1381,11 +1381,11 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 	if cpID > 0 {
 		heading, action = "Edit Critical Path", back+"/critical-paths/"+strconv.FormatInt(cpID, 10)+"/edit"
 		row := app.db.QueryRow(
-			`SELECT id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at, IFNULL(note,''),
+			`SELECT id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at, IFNULL(notes,''),
 			        IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
 			 FROM critical_paths WHERE id = ? AND host_id = ?`, cpID, id)
 		current = &CriticalPath{HostID: id}
-		if err := row.Scan(&current.ID, &current.SourceHost, &current.Method, &current.Credentials, &current.OccurredAt, &current.Note,
+		if err := row.Scan(&current.ID, &current.SourceHost, &current.Method, &current.Credentials, &current.OccurredAt, &current.Notes,
 			&current.CreatedBy, &current.CreatedAt, &current.UpdatedBy, &current.UpdatedAt); err == sql.ErrNoRows {
 			http.NotFound(w, r)
 			return
@@ -1394,19 +1394,19 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
-	fields := func(source, method, credentials, note string) []itemField {
+	fields := func(source, method, credentials, notes string) []itemField {
 		return []itemField{
 			{Label: "Source Host", Name: "source_host", Value: source, Kind: "text"},
 			{Label: "Method", Name: "method", Value: method, Kind: "text"},
 			{Label: "Credentials", Name: "credentials", Value: credentials, Kind: "text"},
-			{Label: "Note", Name: "note", Value: note, Kind: "textarea"},
+			{Label: "Notes", Name: "notes", Value: notes, Kind: "textarea"},
 		}
 	}
 	meta := func() []string {
 		if current == nil {
 			return nil
 		}
-		return append([]string{"Date / Time: " + current.OccurredAt + " UTC"},
+		return append([]string{"Occurred At: " + current.OccurredAt + " UTC"},
 			auditMeta(current.CreatedBy, current.CreatedAt, current.UpdatedBy, current.UpdatedAt)...)
 	}
 	if r.Method == http.MethodPost {
@@ -1417,7 +1417,7 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 		source := strings.TrimSpace(r.FormValue("source_host"))
 		method := strings.TrimSpace(r.FormValue("method"))
 		credentials := strings.TrimSpace(r.FormValue("credentials"))
-		note := strings.TrimSpace(r.FormValue("note"))
+		notes := strings.TrimSpace(r.FormValue("notes"))
 		errMsg := ""
 		if source == "" {
 			errMsg = "Source Host is required."
@@ -1427,13 +1427,13 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 			errMsg = msg
 		} else if msg := checkFieldLen("Credentials", credentials, maxShortFieldLen); msg != "" {
 			errMsg = msg
-		} else if msg := checkFieldLen("Note", note, maxLongFieldLen); msg != "" {
+		} else if msg := checkFieldLen("Notes", notes, maxLongFieldLen); msg != "" {
 			errMsg = msg
 		}
 		if errMsg != "" {
 			app.renderItemForm(w, r, http.StatusBadRequest, itemFormPage{
 				Heading: heading, Action: action, BackURL: back,
-				Error: errMsg, Fields: fields(source, method, credentials, note), Meta: meta(),
+				Error: errMsg, Fields: fields(source, method, credentials, notes), Meta: meta(),
 			})
 			return
 		}
@@ -1445,15 +1445,15 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 			itemID, err = app.newRandomID("critical_paths")
 			if err == nil {
 				_, err = app.db.Exec(
-					`INSERT INTO critical_paths (id, host_id, source_host, method, credentials, occurred_at, note, created_by, created_at, updated_by, updated_at)
+					`INSERT INTO critical_paths (id, host_id, source_host, method, credentials, occurred_at, notes, created_by, created_at, updated_by, updated_at)
 					 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-					itemID, id, source, method, credentials, now, note, sess.Username, now, sess.Username, now)
+					itemID, id, source, method, credentials, now, notes, sess.Username, now, sess.Username, now)
 			}
 		} else {
 			_, err = app.db.Exec(
-				`UPDATE critical_paths SET source_host = ?, method = ?, credentials = ?, note = ?, updated_by = ?, updated_at = ?
+				`UPDATE critical_paths SET source_host = ?, method = ?, credentials = ?, notes = ?, updated_by = ?, updated_at = ?
 				 WHERE id = ? AND host_id = ?`,
-				source, method, credentials, note, sess.Username, now, cpID, id)
+				source, method, credentials, notes, sess.Username, now, cpID, id)
 		}
 		if err != nil {
 			log.Printf("save critical path: %v", err)
@@ -1463,11 +1463,11 @@ func (app *App) criticalPathFormHandler(w http.ResponseWriter, r *http.Request) 
 		http.Redirect(w, r, back, http.StatusFound)
 		return
 	}
-	source, method, credentials, note := "", "", "", ""
+	source, method, credentials, notes := "", "", "", ""
 	if current != nil {
-		source, method, credentials, note = current.SourceHost, current.Method, current.Credentials, current.Note
+		source, method, credentials, notes = current.SourceHost, current.Method, current.Credentials, current.Notes
 	}
 	app.renderItemForm(w, r, http.StatusOK, itemFormPage{
-		Heading: heading, Action: action, BackURL: back, Fields: fields(source, method, credentials, note), Meta: meta(),
+		Heading: heading, Action: action, BackURL: back, Fields: fields(source, method, credentials, notes), Meta: meta(),
 	})
 }

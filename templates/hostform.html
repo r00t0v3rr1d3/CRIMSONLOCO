@@ -46,7 +46,7 @@
                 <div class="form-field"><label>IP Address</label><input type="text" name="ip_address" value="{{.IPAddress}}"></div>
                 <div class="form-field"><label>FQDN</label><input type="text" name="fqdn" value="{{.FQDN}}"></div>
                 <div class="form-field"><label>MAC Address</label><input type="text" name="mac_address" value="{{.MACAddress}}"></div>
-                <div class="form-field"><label>Machine GUID</label><input type="text" name="machine_guid" value="{{.MachineGUID}}"></div>
+                <div class="form-field"><label>Machine ID</label><input type="text" name="machine_id" value="{{.MachineID}}"></div>
                 <div class="form-field"><label>Hardware</label><input type="text" name="hardware" value="{{.Hardware}}"></div>
                 <div class="form-field"><label>Function</label><input type="text" name="function" value="{{.Function}}"></div>
                 <div class="form-field"><label>OS</label><input type="text" name="os" value="{{.OS}}"></div>
@@ -63,7 +63,7 @@
                         {{range $.Statuses}}<option value="{{.}}" {{if eq . $current}}selected{{end}}>{{.}}</option>{{end}}
                     </select>
                 </div>
-                <div class="form-field wide"><label>Note</label><textarea name="note" rows="2">{{.Note}}</textarea></div>
+                <div class="form-field wide"><label>Notes</label><textarea name="notes" rows="2">{{.Notes}}</textarea></div>
                 <div class="form-field wide"><label>Administrators (users / groups)</label><textarea name="administrators" rows="2">{{.Administrators}}</textarea></div>
             </div>
             {{end}}

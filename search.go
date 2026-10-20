@@ -124,8 +124,8 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	pattern := "%" + likeEscaper.Replace(q) + "%"
 	hostIDs := map[int64]bool{}
 
-	hostClause, n := likeClause("ip_address", "mac_address", "machine_guid", "hardware", "function", "os",
-		"status", "fqdn", "nt_name", "nt_domain", "operation", "note", "administrators")
+	hostClause, n := likeClause("ip_address", "mac_address", "machine_id", "hardware", "function", "os",
+		"status", "fqdn", "nt_name", "nt_domain", "operation", "notes", "administrators")
 	rows, err := app.db.Query("SELECT id FROM hosts WHERE "+hostClause, repeatArg(pattern, n)...)
 	if err != nil {
 		log.Printf("global search hosts: %v", err)
@@ -177,9 +177,9 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	frows.Close()
 
 	var cps []*CriticalPath
-	cpClause, n := likeClause("source_host", "method", "credentials", "occurred_at", "note")
+	cpClause, n := likeClause("source_host", "method", "credentials", "occurred_at", "notes")
 	crows, err := app.db.Query(`SELECT id, host_id, IFNULL(source_host,''), IFNULL(method,''), IFNULL(credentials,''), occurred_at,
-		IFNULL(note,''), IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
+		IFNULL(notes,''), IFNULL(created_by,''), created_at, IFNULL(updated_by,''), IFNULL(updated_at,'')
 		FROM critical_paths WHERE `+cpClause, repeatArg(pattern, n)...)
 	if err != nil {
 		log.Printf("global search critical paths: %v", err)
@@ -188,7 +188,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for crows.Next() {
 		cp := &CriticalPath{}
-		if err := crows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.OccurredAt, &cp.Note, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
+		if err := crows.Scan(&cp.ID, &cp.HostID, &cp.SourceHost, &cp.Method, &cp.Credentials, &cp.OccurredAt, &cp.Notes, &cp.CreatedBy, &cp.CreatedAt, &cp.UpdatedBy, &cp.UpdatedAt); err == nil {
 			cps = append(cps, cp)
 			hostIDs[cp.HostID] = true
 		}
@@ -241,11 +241,11 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 		res := searchResult{Host: h, Title: hostTitle(h)}
 		addMatches(&res, [][2]string{
 			{"IP Address", h.IPAddress}, {"MAC Address", h.MACAddress},
-			{"Machine GUID", h.MachineGUID}, {"Hardware", h.Hardware},
+			{"Machine ID", h.MachineID}, {"Hardware", h.Hardware},
 			{"Function", h.Function}, {"OS", h.OS},
 			{"Status", h.Status}, {"FQDN", h.FQDN}, {"NT Name", h.NTName},
 			{"NT Domain", h.NTDomain}, {"Operation", h.Operation},
-			{"Note", h.Note}, {"Administrators", h.Administrators},
+			{"Notes", h.Notes}, {"Administrators", h.Administrators},
 		})
 		for _, t := range toolsByHost[h.ID] {
 			name := t.Name
@@ -271,7 +271,7 @@ func (app *App) globalSearchHandler(w http.ResponseWriter, r *http.Request) {
 			addMatches(&res, [][2]string{
 				{"Critical Path Source Host", cp.SourceHost}, {"Critical Path Method", cp.Method},
 				{"Critical Path Credentials", cp.Credentials},
-				{"Critical Path Date/Time", cp.OccurredAt}, {"Critical Path Note", cp.Note},
+				{"Critical Path Occurred At", cp.OccurredAt}, {"Critical Path Notes", cp.Notes},
 			})
 		}
 		page.Results = append(page.Results, res)

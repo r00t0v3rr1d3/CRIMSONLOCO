@@ -31,7 +31,7 @@ import (
 
 const Version = "1.1.0"
 
-const SchemaVersion = 9
+const SchemaVersion = 11
 
 const sessionLifetime = 8 * time.Hour
 
@@ -106,7 +106,7 @@ func initDB(db *sql.DB) error {
 			version INTEGER NOT NULL DEFAULT 1,
 			ip_address TEXT,
 			mac_address TEXT,
-			machine_guid TEXT,
+			machine_id TEXT,
 			hardware TEXT,
 			function TEXT,
 			os TEXT,
@@ -115,7 +115,7 @@ func initDB(db *sql.DB) error {
 			nt_name TEXT,
 			nt_domain TEXT,
 			operation TEXT,
-			note TEXT,
+			notes TEXT,
 			administrators TEXT
 		)`,
 		`CREATE TABLE IF NOT EXISTS host_tools (
@@ -157,7 +157,7 @@ func initDB(db *sql.DB) error {
 			method TEXT,
 			credentials TEXT,
 			occurred_at TEXT NOT NULL,
-			note TEXT,
+			notes TEXT,
 			created_by TEXT,
 			created_at TEXT NOT NULL,
 			updated_by TEXT,
