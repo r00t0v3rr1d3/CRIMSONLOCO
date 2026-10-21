@@ -60,6 +60,7 @@ jobs:
           Copy-Item static $dir -Recurse
           Copy-Item CRIMSONLOCO.conf $dir
           Copy-Item README.md $dir
+          Copy-Item LICENSE $dir
           Compress-Archive -Path $dir -DestinationPath "$dir.zip"
 
       - name: Package (Linux and macOS)
@@ -70,7 +71,7 @@ jobs:
           mkdir "$dir"
           cp CRIMSONLOCO "$dir/"
           cp -r templates static "$dir/"
-          cp CRIMSONLOCO.conf README.md "$dir/"
+          cp CRIMSONLOCO.conf README.md LICENSE "$dir/"
           zip -r "$dir.zip" "$dir"
 
       - uses: actions/upload-artifact@v4
