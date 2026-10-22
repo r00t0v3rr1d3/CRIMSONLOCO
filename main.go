@@ -293,6 +293,12 @@ func securityHeaders(next http.Handler) http.Handler {
 		// small inline scripts (the theme snippet, the PID reveal).
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000")
+		// Pages render live account data, some of it credentials; keep
+		// them out of the browser's disk cache. Static assets carry no
+		// per-user data and keep normal caching.
+		if !strings.HasPrefix(r.URL.Path, "/static/") {
+			w.Header().Set("Cache-Control", "no-store")
+		}
 		next.ServeHTTP(w, r)
 	})
 }
