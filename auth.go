@@ -130,9 +130,11 @@ func subtleEqual(a, b string) bool {
 // ---------------------------------------------------------------------------
 
 const (
-	loginFailThreshold = 5
-	loginFailWindow    = 15 * time.Minute
-	loginLockDuration  = 15 * time.Minute
+	loginFailThreshold   = 5
+	loginFailWindow      = 15 * time.Minute
+	loginLockDuration    = 15 * time.Minute
+	loginSweepAlertCount = 100
+	maxUsernameLength    = 64
 )
 
 type loginThrottleEntry struct {
@@ -186,6 +188,23 @@ func (t *loginThrottleState) recordSuccess(username string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	delete(t.entries, username)
+}
+
+func (t *loginThrottleState) sweepIdle(now time.Time) int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	cleared := 0
+	for username, e := range t.entries {
+		if !e.lockedUntil.IsZero() && now.Before(e.lockedUntil) {
+			continue
+		}
+		if !e.windowStart.IsZero() && now.Sub(e.windowStart) <= loginFailWindow {
+			continue
+		}
+		delete(t.entries, username)
+		cleared++
+	}
+	return cleared
 }
 
 // ---------------------------------------------------------------------------
@@ -255,6 +274,9 @@ func (app *App) pruneSessions() {
 	if _, err := app.db.Exec("DELETE FROM sessions WHERE expires_at < ?", nowString()); err != nil {
 		log.Printf("prune sessions: %v", err)
 	}
+	if cleared := loginThrottle.sweepIdle(time.Now()); cleared > loginSweepAlertCount {
+		log.Printf("Likely brute force attacks or password spraying detected.")
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -314,6 +336,9 @@ func (app *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	username := sanitizeUsername(r.Form.Get("username"))
+	if len(username) > maxUsernameLength {
+		username = username[:maxUsernameLength]
+	}
 	password := r.Form.Get("password")
 
 	if loginThrottle.locked(username, time.Now()) {

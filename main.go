@@ -70,9 +70,6 @@ func sessionFrom(r *http.Request) *Session {
 // ---------------------------------------------------------------------------
 
 func openDB(path string) (*sql.DB, error) {
-	// Pre-create the file owner-only so SQLite inherits it; a file SQLite
-	// creates itself gets the process umask, typically world-readable 0644.
-	// On Windows the mode is ignored and creation behaves as before.
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0600)
 		if err != nil {
@@ -293,9 +290,6 @@ func securityHeaders(next http.Handler) http.Handler {
 		// small inline scripts (the theme snippet, the PID reveal).
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000")
-		// Pages render live account data, some of it credentials; keep
-		// them out of the browser's disk cache. Static assets carry no
-		// per-user data and keep normal caching.
 		if !strings.HasPrefix(r.URL.Path, "/static/") {
 			w.Header().Set("Cache-Control", "no-store")
 		}

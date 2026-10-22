@@ -57,6 +57,10 @@ func (app *App) userCreateHandler(w http.ResponseWriter, r *http.Request) {
 		app.renderAdmin(w, r, "", "Username is required (letters, numbers, . _ - only).")
 		return
 	}
+	if len(username) > maxUsernameLength {
+		app.renderAdmin(w, r, "", "Username is too long (64 characters max).")
+		return
+	}
 	if len(password) < 8 {
 		app.renderAdmin(w, r, "", "Password must be at least 8 characters.")
 		return
