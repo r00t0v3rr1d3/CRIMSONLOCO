@@ -31,7 +31,7 @@ import (
 // Config and shared state
 // ---------------------------------------------------------------------------
 
-const Version = "1.1.0"
+const Version = "1.1.1"
 
 const SchemaVersion = 14
 
@@ -70,6 +70,18 @@ func sessionFrom(r *http.Request) *Session {
 // ---------------------------------------------------------------------------
 
 func openDB(path string) (*sql.DB, error) {
+	// Pre-create the file owner-only so SQLite inherits it; a file SQLite
+	// creates itself gets the process umask, typically world-readable 0644.
+	// On Windows the mode is ignored and creation behaves as before.
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0600)
+		if err != nil {
+			return nil, err
+		}
+		if err := f.Close(); err != nil {
+			return nil, err
+		}
+	}
 	db, err := sql.Open("sqlite3", "file:"+path+"?_busy_timeout=5000&_foreign_keys=on")
 	if err != nil {
 		return nil, err
