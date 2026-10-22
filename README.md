@@ -86,6 +86,65 @@ Usage: CRIMSONLOCO [options]
 Long options accept --addr :8443 and --addr=:8443 forms.
 ```
 
+## Encryption at rest (Linux)
+
+On Linux the whole CRIMSONLOCO directory can live inside a LUKS-encrypted
+file, so the database, the TLS key, and everything else in the directory
+are encrypted at rest.
+
+The example below creates a 2 GB volume. The database grows by roughly
+1.2 MB per 1,000 hosts (100,000 hosts is about 120 MB), so 2 GB leaves
+room for the application, the database, and backup copies of the
+database stored inside the volume. Run these commands as root:
+
+```sh
+dd if=/dev/zero of=/var/lib/CRIMSONLOCO-data.img bs=1M count=2048
+cryptsetup luksFormat /var/lib/CRIMSONLOCO-data.img
+cryptsetup open /var/lib/CRIMSONLOCO-data.img CRIMSONLOCO_data
+mkfs.ext4 -m 0 /dev/mapper/CRIMSONLOCO_data
+mkdir -p /mnt/CRIMSONLOCO
+mount /dev/mapper/CRIMSONLOCO_data /mnt/CRIMSONLOCO
+```
+
+`luksFormat` asks for the encryption passphrase. Store it in a password
+manager: there is no recovery, and losing it means the contents of the
+volume are gone for good.
+
+Extract the CRIMSONLOCO release into `/mnt/CRIMSONLOCO`, then close the
+volume again:
+
+```sh
+umount /mnt/CRIMSONLOCO
+cryptsetup close CRIMSONLOCO_data
+```
+
+The volume is now in its normal closed state. Reopen it with
+`CRIMSONLOCO-open` (below) and start CRIMSONLOCO from `/mnt/CRIMSONLOCO`
+to confirm the whole round trip works before relying on it.
+
+Two small scripts in `/usr/local/bin` open and close the volume.
+`/usr/local/bin/CRIMSONLOCO-open`:
+
+```sh
+#!/bin/bash
+cryptsetup open /var/lib/CRIMSONLOCO-data.img CRIMSONLOCO_data
+mount /dev/mapper/CRIMSONLOCO_data /mnt/CRIMSONLOCO
+```
+
+`/usr/local/bin/CRIMSONLOCO-close`:
+
+```sh
+#!/bin/bash
+umount /mnt/CRIMSONLOCO
+cryptsetup close CRIMSONLOCO_data
+```
+
+Make both executable (`chmod +x`). Whenever the volume is closed, after
+a reboot or after running `CRIMSONLOCO-close`, run `CRIMSONLOCO-open` as
+root and enter the passphrase before starting CRIMSONLOCO. Stop
+CRIMSONLOCO before running `CRIMSONLOCO-close`. Copying the image file
+while the volume is closed is a complete backup, already encrypted.
+
 ## Notes
 
 - Passwords are stored as PBKDF2-HMAC-SHA256 hashes with a random salt per
